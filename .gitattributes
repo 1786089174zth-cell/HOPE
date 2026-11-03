@@ -8,6 +8,9 @@ agibot/mocap_sticker_shell_v3/motive_asset/source/A3.motive -text whitespace=bla
 # Generated documents. Review rendered output instead of binary internals.
 *.pdf binary
 
+# The PPQ004 stationary task checks the byte hash of this profile.
+configs/ball_physics_ppq004_training.yaml text eol=lf
+
 # Distributable PyTorch model assets. Store binary payloads in Git LFS.
 *.pt filter=lfs diff=lfs merge=lfs -text
 
