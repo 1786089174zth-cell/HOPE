@@ -8,7 +8,7 @@ from concurrent_physical_balls import ConcurrentBalls
 from recurrent_physical_ball import VideoRecorder
 
 
-def render(output,bundle):
+def render(output,bundle,wide_view=False):
     out=Path(output);manifest=json.loads((Path(bundle)/'manifest.json').read_text())
     config=json.loads((out/'configuration.json').read_text())
     if config['policy_manifest']['onnx_sha256']!=manifest['onnx_sha256']:raise ValueError('Video bundle does not match evaluation')
@@ -17,6 +17,8 @@ def render(output,bundle):
     video=out/'diagnostic.mp4'
     if video.exists():raise FileExistsError('Refusing existing video')
     recorder=VideoRecorder(plant,video,fps=20,concurrent=True)
+    if wide_view:
+        recorder.camera.distance=7.2;recorder.camera.azimuth=105;recorder.camera.elevation=-43
     trajectories=(out/'ball-trajectories.jsonl').open();states=(out/'render-states.jsonl').open()
     next_sample=next(trajectories,None);records={};count=0
     try:
@@ -39,9 +41,10 @@ def render(output,bundle):
         recorder.close();trajectories.close();states.close()
     dump(out/'video-receipt.json',{'frames':count,'fps':20,'video':str(video),
         'semantics':'Recorded actual qpos and measured trajectory playback; no actor inference, planner solve, new collision or score computed during rendering.',
-        'onnx_sha256':manifest['onnx_sha256']})
+        'onnx_sha256':manifest['onnx_sha256'],'wide_view':wide_view})
     print('Recorded-state video:',video,flush=True)
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',required=True);p.add_argument('--bundle',required=True)
-    a=p.parse_args();render(a.output,a.bundle)
+    p.add_argument('--wide-view',action='store_true')
+    a=p.parse_args();render(a.output,a.bundle,a.wide_view)

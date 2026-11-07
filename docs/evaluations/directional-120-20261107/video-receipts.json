@@ -1,0 +1,28 @@
+{
+  "19000": {
+    "video_filename": "model19000-directional-120-dropout.mp4",
+    "sha256": "fef1b5e4aef07418004ed2fb7cf19aba4a82a6009170c6a3d55ffb2a9daf708f",
+    "bytes": 7259537,
+    "frames": 4095,
+    "fps": 20,
+    "duration_s": 204.75,
+    "container_duration": "00:03:24.75",
+    "decode_check": "ffmpeg full decode PASS",
+    "initial_idle_preserved": true,
+    "semantics": "Recorded actual qpos and measured trajectory playback; no actor inference, planner solve, new collision or score computed during rendering.",
+    "wide_view": true
+  },
+  "29999": {
+    "video_filename": "model29999-directional-120-dropout.mp4",
+    "sha256": "15882246564dc4870f15bd5de55de5ff797e9bb34630b6faebccfc5a72092801",
+    "bytes": 5946071,
+    "frames": 3343,
+    "fps": 20,
+    "duration_s": 167.15,
+    "container_duration": "00:02:47.15",
+    "decode_check": "ffmpeg full decode PASS",
+    "initial_idle_preserved": true,
+    "semantics": "Recorded actual qpos and measured trajectory playback; no actor inference, planner solve, new collision or score computed during rendering.",
+    "wide_view": true
+  }
+}

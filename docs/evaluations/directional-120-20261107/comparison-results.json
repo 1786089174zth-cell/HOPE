@@ -1,0 +1,220 @@
+{
+  "scene_sha256": "e788e08d2598e5ef59298465b2d8486757f2223bb691b78218e3a9852e4d6177",
+  "replay_sha256": "34f449f7a41e68ea914b2461b99e61fc6d4ece64437be557dd793b92297db1a8",
+  "dropout_spec": "21:0.04,31:0.1,43:0.2,52:0.3,61:1.0,78:0.5,90:0.2,120:1.0,150:1.5,180:2.0",
+  "planner_mode": "recorded live C++ commands, held-home source; same commands for both policies",
+  "results": {
+    "19000": {
+      "directory": "/home/rog/hope-evaluations/directional-120-comparison/model19000-7uc_63xo",
+      "checkpoint_sha256": "744526d2e7a9fdabe990070054ec3bd8126b286bc79041f94a930b0078c257c0",
+      "onnx_sha256": "f3f56fe7e0c31f94bea1645fae8d2f776dca01033f2c895d850bf5c708801dda",
+      "falls": 0,
+      "fall_time_s": null,
+      "launched": 120,
+      "raw_contacts": 73,
+      "misses": 47,
+      "error": null,
+      "pelvis_dropout_actor_ticks": 342,
+      "dropout_windows_started": 10,
+      "max_control_sample_tilt_before_fall_deg": 4.214038207346709,
+      "min_control_sample_base_z_before_fall_m": 1.054813805793392,
+      "category_stats": {
+        "nominal": {
+          "scheduled": 6,
+          "launched": 6,
+          "raw_contacts": 6,
+          "misses": 0,
+          "planner_on_time": 6
+        },
+        "outside_left": {
+          "scheduled": 19,
+          "launched": 19,
+          "raw_contacts": 10,
+          "misses": 9,
+          "planner_on_time": 19
+        },
+        "outside_right": {
+          "scheduled": 19,
+          "launched": 19,
+          "raw_contacts": 15,
+          "misses": 4,
+          "planner_on_time": 19
+        },
+        "fan_left": {
+          "scheduled": 19,
+          "launched": 19,
+          "raw_contacts": 8,
+          "misses": 11,
+          "planner_on_time": 15
+        },
+        "fan_center": {
+          "scheduled": 19,
+          "launched": 19,
+          "raw_contacts": 19,
+          "misses": 0,
+          "planner_on_time": 17
+        },
+        "fan_right": {
+          "scheduled": 19,
+          "launched": 19,
+          "raw_contacts": 0,
+          "misses": 19,
+          "planner_on_time": 17
+        },
+        "mixed_low": {
+          "scheduled": 4,
+          "launched": 4,
+          "raw_contacts": 4,
+          "misses": 0,
+          "planner_on_time": 4
+        },
+        "mixed_high": {
+          "scheduled": 3,
+          "launched": 3,
+          "raw_contacts": 3,
+          "misses": 0,
+          "planner_on_time": 3
+        },
+        "mixed_left": {
+          "scheduled": 3,
+          "launched": 3,
+          "raw_contacts": 2,
+          "misses": 1,
+          "planner_on_time": 3
+        },
+        "mixed_right": {
+          "scheduled": 3,
+          "launched": 3,
+          "raw_contacts": 0,
+          "misses": 3,
+          "planner_on_time": 3
+        },
+        "mixed_oblique": {
+          "scheduled": 3,
+          "launched": 3,
+          "raw_contacts": 3,
+          "misses": 0,
+          "planner_on_time": 3
+        },
+        "mixed_center": {
+          "scheduled": 3,
+          "launched": 3,
+          "raw_contacts": 3,
+          "misses": 0,
+          "planner_on_time": 3
+        }
+      },
+      "bridge": {
+        "replayed_commands": 112,
+        "expected_commands": 112
+      },
+      "summary_sha256": "459fdbf0ee0a16155622a06a7b59cce7f15c255bb03871e97eeb3efdffc60051"
+    },
+    "29999": {
+      "directory": "/home/rog/hope-evaluations/directional-120-comparison/model29999-rn8cql4b",
+      "checkpoint_sha256": "6e671c56d1de5ead2a7553f489bf346bb372957d87f0bcc30854e2931e472c88",
+      "onnx_sha256": "c361831725a4fd42661a7b6f46c738000120e248bae06e28f9e05195da3e96d3",
+      "falls": 1,
+      "fall_time_s": 166.66000000001145,
+      "launched": 96,
+      "raw_contacts": 53,
+      "misses": 43,
+      "error": null,
+      "pelvis_dropout_actor_ticks": 242,
+      "dropout_windows_started": 9,
+      "max_control_sample_tilt_before_fall_deg": 54.76503306513253,
+      "min_control_sample_base_z_before_fall_m": 0.9124474791309872,
+      "category_stats": {
+        "nominal": {
+          "scheduled": 6,
+          "launched": 6,
+          "raw_contacts": 6,
+          "misses": 0,
+          "planner_on_time": 6
+        },
+        "outside_left": {
+          "scheduled": 19,
+          "launched": 15,
+          "raw_contacts": 6,
+          "misses": 9,
+          "planner_on_time": 15
+        },
+        "outside_right": {
+          "scheduled": 19,
+          "launched": 15,
+          "raw_contacts": 10,
+          "misses": 5,
+          "planner_on_time": 15
+        },
+        "fan_left": {
+          "scheduled": 19,
+          "launched": 15,
+          "raw_contacts": 6,
+          "misses": 9,
+          "planner_on_time": 11
+        },
+        "fan_center": {
+          "scheduled": 19,
+          "launched": 15,
+          "raw_contacts": 13,
+          "misses": 2,
+          "planner_on_time": 13
+        },
+        "fan_right": {
+          "scheduled": 19,
+          "launched": 15,
+          "raw_contacts": 0,
+          "misses": 15,
+          "planner_on_time": 13
+        },
+        "mixed_low": {
+          "scheduled": 4,
+          "launched": 3,
+          "raw_contacts": 3,
+          "misses": 0,
+          "planner_on_time": 3
+        },
+        "mixed_high": {
+          "scheduled": 3,
+          "launched": 3,
+          "raw_contacts": 3,
+          "misses": 0,
+          "planner_on_time": 3
+        },
+        "mixed_left": {
+          "scheduled": 3,
+          "launched": 3,
+          "raw_contacts": 2,
+          "misses": 1,
+          "planner_on_time": 3
+        },
+        "mixed_right": {
+          "scheduled": 3,
+          "launched": 2,
+          "raw_contacts": 0,
+          "misses": 2,
+          "planner_on_time": 2
+        },
+        "mixed_oblique": {
+          "scheduled": 3,
+          "launched": 2,
+          "raw_contacts": 2,
+          "misses": 0,
+          "planner_on_time": 2
+        },
+        "mixed_center": {
+          "scheduled": 3,
+          "launched": 2,
+          "raw_contacts": 2,
+          "misses": 0,
+          "planner_on_time": 2
+        }
+      },
+      "bridge": {
+        "replayed_commands": 88,
+        "expected_commands": 112
+      },
+      "summary_sha256": "0f29a2b4b89562f8338e1d98a905adc54efffd59362cf8ab43e0692b9804e212"
+    }
+  }
+}

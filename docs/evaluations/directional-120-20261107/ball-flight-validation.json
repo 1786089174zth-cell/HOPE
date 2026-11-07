@@ -1,0 +1,1434 @@
+[
+  {
+    "shot_id": 1,
+    "crossing_w": [
+      0.58,
+      -0.26,
+      1.0478770079562114
+    ],
+    "terminal_s": 1.417,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 2,
+    "crossing_w": [
+      0.58,
+      0.04999999999999993,
+      1.0478770079562114
+    ],
+    "terminal_s": 1.417,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 3,
+    "crossing_w": [
+      0.58,
+      -0.29500000000000015,
+      1.0478770079562114
+    ],
+    "terminal_s": 1.417,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 4,
+    "crossing_w": [
+      0.58,
+      0.10499999999999998,
+      1.0478770079562114
+    ],
+    "terminal_s": 1.417,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 5,
+    "crossing_w": [
+      0.58,
+      -0.33000000000000007,
+      1.0478770079562114
+    ],
+    "terminal_s": 1.417,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 6,
+    "crossing_w": [
+      0.58,
+      0.1499999999999999,
+      1.0478770079562114
+    ],
+    "terminal_s": 1.417,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 7,
+    "crossing_w": [
+      0.58,
+      -0.1499997333333345,
+      0.9452769991985972
+    ],
+    "terminal_s": 1.959,
+    "table_contacts": 2,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 8,
+    "crossing_w": [
+      0.58,
+      0.1499997333333344,
+      0.9452769991985973
+    ],
+    "terminal_s": 1.959,
+    "table_contacts": 2,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 9,
+    "crossing_w": [
+      0.58,
+      -0.5499996266666668,
+      0.8300781642365842
+    ],
+    "terminal_s": 1.888,
+    "table_contacts": 2,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 10,
+    "crossing_w": [
+      0.58,
+      -3.199999996675162e-07,
+      0.8421531490108466
+    ],
+    "terminal_s": 1.89,
+    "table_contacts": 2,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 11,
+    "crossing_w": [
+      0.58,
+      0.5499997600000011,
+      0.8112223066545898
+    ],
+    "terminal_s": 1.886,
+    "table_contacts": 2,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 12,
+    "crossing_w": [
+      0.58,
+      -4.539618492709987e-33,
+      1.0691146253221295
+    ],
+    "terminal_s": 1.364,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 13,
+    "crossing_w": [
+      0.58,
+      0.3249996800000031,
+      1.2013550254405851
+    ],
+    "terminal_s": 1.439,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 14,
+    "crossing_w": [
+      0.58,
+      -0.3249996800000031,
+      1.2013550254405843
+    ],
+    "terminal_s": 1.439,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 15,
+    "crossing_w": [
+      0.58,
+      -0.7500001750000006,
+      1.2563742139901437
+    ],
+    "terminal_s": 1.454,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 16,
+    "crossing_w": [
+      0.58,
+      -5.323434850496555e-34,
+      1.2676948818655833
+    ],
+    "terminal_s": 1.457,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 17,
+    "crossing_w": [
+      0.58,
+      0.7500001750000009,
+      1.2563742139901437
+    ],
+    "terminal_s": 1.454,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 18,
+    "crossing_w": [
+      0.58,
+      1.756379396465368e-33,
+      1.435587419190838
+    ],
+    "terminal_s": 1.602,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 19,
+    "crossing_w": [
+      0.58,
+      -0.5000028529619599,
+      1.2954989712174996
+    ],
+    "terminal_s": 1.492,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 20,
+    "crossing_w": [
+      0.58,
+      0.5000028529619592,
+      1.2954989712174994
+    ],
+    "terminal_s": 1.492,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 21,
+    "crossing_w": [
+      0.58,
+      -0.9499996941176475,
+      1.3148164960085211
+    ],
+    "terminal_s": 1.454,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 22,
+    "crossing_w": [
+      0.58,
+      4.7058823496991676e-08,
+      1.322425573412581
+    ],
+    "terminal_s": 1.461,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 23,
+    "crossing_w": null,
+    "terminal_s": 0.804,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 24,
+    "crossing_w": [
+      0.58,
+      -0.7108333333333329,
+      1.0533695318425234
+    ],
+    "terminal_s": 1.42,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 25,
+    "crossing_w": [
+      0.58,
+      0.15000019200001105,
+      1.2635260418616667
+    ],
+    "terminal_s": 1.463,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 26,
+    "crossing_w": [
+      0.58,
+      -0.15000019200001083,
+      1.2635260418616665
+    ],
+    "terminal_s": 1.463,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 27,
+    "crossing_w": [
+      0.58,
+      -0.5499997555555559,
+      1.2059528252786915
+    ],
+    "terminal_s": 1.548,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 28,
+    "crossing_w": [
+      0.58,
+      6.666666699354395e-08,
+      1.2009185644264384
+    ],
+    "terminal_s": 1.549,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 29,
+    "crossing_w": [
+      0.58,
+      0.5499998888888883,
+      1.2134293239908034
+    ],
+    "terminal_s": 1.546,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 30,
+    "crossing_w": [
+      0.58,
+      0.7058333333333328,
+      1.0533695318425236
+    ],
+    "terminal_s": 1.42,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 31,
+    "crossing_w": [
+      0.58,
+      -0.3250002200000049,
+      1.1611408777656889
+    ],
+    "terminal_s": 1.377,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 32,
+    "crossing_w": [
+      0.58,
+      0.3250002200000049,
+      1.1611408777656889
+    ],
+    "terminal_s": 1.377,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 33,
+    "crossing_w": [
+      0.58,
+      -0.7500003199999972,
+      0.9838658194983633
+    ],
+    "terminal_s": 1.405,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 34,
+    "crossing_w": [
+      0.58,
+      1.6927605601592984e-33,
+      1.0146633206790827
+    ],
+    "terminal_s": 1.408,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 35,
+    "crossing_w": [
+      0.58,
+      0.7500003199999971,
+      0.9838658194983636
+    ],
+    "terminal_s": 1.405,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 36,
+    "crossing_w": [
+      0.58,
+      0.05907210807376178,
+      1.2497573913744273
+    ],
+    "terminal_s": 1.404,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 37,
+    "crossing_w": [
+      0.58,
+      0.50000014506297,
+      1.0755206314112709
+    ],
+    "terminal_s": 1.466,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 38,
+    "crossing_w": [
+      0.58,
+      -0.5000001450629694,
+      1.0755206314112713
+    ],
+    "terminal_s": 1.466,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 39,
+    "crossing_w": [
+      0.58,
+      -0.9499999499999974,
+      1.0426037668129184
+    ],
+    "terminal_s": 1.364,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 40,
+    "crossing_w": [
+      0.58,
+      1.7500000010605955e-07,
+      1.0930979804964236
+    ],
+    "terminal_s": 1.37,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 41,
+    "crossing_w": [
+      0.58,
+      0.950000299999998,
+      1.0633353343989387
+    ],
+    "terminal_s": 1.367,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 42,
+    "crossing_w": [
+      0.58,
+      2.0338916232009075e-48,
+      1.0478770079562114
+    ],
+    "terminal_s": 1.417,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 43,
+    "crossing_w": [
+      0.58,
+      -0.1499999753846177,
+      1.2822977338191808
+    ],
+    "terminal_s": 1.465,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 44,
+    "crossing_w": [
+      0.58,
+      0.1499999753846179,
+      1.2822977338191808
+    ],
+    "terminal_s": 1.465,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 45,
+    "crossing_w": [
+      0.58,
+      -0.5500000223845153,
+      1.3264286445353821
+    ],
+    "terminal_s": 1.499,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 46,
+    "crossing_w": [
+      0.58,
+      -4.7058823137233067e-08,
+      1.3229372663502668
+    ],
+    "terminal_s": 1.501,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 47,
+    "crossing_w": [
+      0.58,
+      0.5500000992552572,
+      1.3273841516842713
+    ],
+    "terminal_s": 1.497,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 48,
+    "crossing_w": [
+      0.58,
+      -0.05492857142857208,
+      1.0101656100765106
+    ],
+    "terminal_s": 1.264,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 49,
+    "crossing_w": [
+      0.58,
+      0.3249998628571399,
+      1.3203730488045426
+    ],
+    "terminal_s": 1.489,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 50,
+    "crossing_w": [
+      0.58,
+      -0.324999862857141,
+      1.3203730488045422
+    ],
+    "terminal_s": 1.489,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 51,
+    "crossing_w": [
+      0.58,
+      -0.7499999333333349,
+      1.127841340946821
+    ],
+    "terminal_s": 1.584,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 52,
+    "crossing_w": [
+      0.58,
+      -7.128191532404592e-49,
+      1.1061100827605173
+    ],
+    "terminal_s": 1.588,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 53,
+    "crossing_w": [
+      0.58,
+      0.7499999333333349,
+      1.127841340946821
+    ],
+    "terminal_s": 1.584,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 54,
+    "crossing_w": [
+      0.58,
+      -0.07178571428571406,
+      1.2513745098393252
+    ],
+    "terminal_s": 1.576,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 55,
+    "crossing_w": [
+      0.58,
+      -0.6677424324444369,
+      0.14398097865536205
+    ],
+    "terminal_s": 0.795,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 56,
+    "crossing_w": [
+      0.58,
+      0.667742432444437,
+      0.14398097865536338
+    ],
+    "terminal_s": 0.795,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 57,
+    "crossing_w": [
+      0.58,
+      -0.950000239999999,
+      0.5193417189960652
+    ],
+    "terminal_s": 1.311,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 58,
+    "crossing_w": [
+      0.58,
+      3.200000000609359e-07,
+      0.8791355367639528
+    ],
+    "terminal_s": 1.831,
+    "table_contacts": 2,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 59,
+    "crossing_w": [
+      0.58,
+      0.9500001066666653,
+      0.562363864941924
+    ],
+    "terminal_s": 1.313,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 60,
+    "crossing_w": [
+      0.58,
+      -0.6875,
+      1.2907853118365946
+    ],
+    "terminal_s": 1.43,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 61,
+    "crossing_w": [
+      0.58,
+      0.15000006000000135,
+      1.1848046147889897
+    ],
+    "terminal_s": 1.385,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 62,
+    "crossing_w": [
+      0.58,
+      -0.15000006000000105,
+      1.1848046147889895
+    ],
+    "terminal_s": 1.385,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 63,
+    "crossing_w": [
+      0.58,
+      -0.5499996749999992,
+      1.1898849687175834
+    ],
+    "terminal_s": 1.413,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 64,
+    "crossing_w": [
+      0.58,
+      -1.7499999995921792e-07,
+      1.1951690102334966
+    ],
+    "terminal_s": 1.414,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 65,
+    "crossing_w": [
+      0.58,
+      0.5500000500000005,
+      1.181553038405281
+    ],
+    "terminal_s": 1.411,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 66,
+    "crossing_w": [
+      0.58,
+      0.6124999999999999,
+      1.2907853118365946
+    ],
+    "terminal_s": 1.43,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 67,
+    "crossing_w": [
+      0.58,
+      -0.3249996533333306,
+      1.235644991809512
+    ],
+    "terminal_s": 1.497,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 68,
+    "crossing_w": [
+      0.58,
+      0.32499965333333064,
+      1.2356449918095123
+    ],
+    "terminal_s": 1.497,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 69,
+    "crossing_w": [
+      0.58,
+      -0.7500000470588245,
+      1.309135938576312
+    ],
+    "terminal_s": 1.538,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 70,
+    "crossing_w": [
+      0.58,
+      5.677658946534049e-20,
+      1.2975299933860407
+    ],
+    "terminal_s": 1.543,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 71,
+    "crossing_w": [
+      0.58,
+      0.7500000470588245,
+      1.3091359385763122
+    ],
+    "terminal_s": 1.538,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 72,
+    "crossing_w": [
+      0.58,
+      -0.0840714285714266,
+      1.290046375517832
+    ],
+    "terminal_s": 1.469,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 73,
+    "crossing_w": [
+      0.58,
+      0.4999997784615365,
+      1.3364506741859878
+    ],
+    "terminal_s": 1.517,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 74,
+    "crossing_w": [
+      0.58,
+      -0.4999997784615357,
+      1.3364506741859876
+    ],
+    "terminal_s": 1.517,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 75,
+    "crossing_w": [
+      0.58,
+      -0.9500001111111143,
+      0.1998082157572251
+    ],
+    "terminal_s": 0.812,
+    "table_contacts": 0,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 76,
+    "crossing_w": [
+      0.58,
+      -6.666666674893439e-08,
+      1.2682151449582477
+    ],
+    "terminal_s": 1.51,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 77,
+    "crossing_w": [
+      0.58,
+      0.9499999777777769,
+      0.22100193459895504
+    ],
+    "terminal_s": 0.812,
+    "table_contacts": 0,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 78,
+    "crossing_w": [
+      0.58,
+      -0.0005000000000004411,
+      1.1060888112223304
+    ],
+    "terminal_s": 1.437,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 79,
+    "crossing_w": [
+      0.58,
+      -0.15000025142856813,
+      1.203783954237834
+    ],
+    "terminal_s": 1.383,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 80,
+    "crossing_w": [
+      0.58,
+      0.15000025142856802,
+      1.2037839542378341
+    ],
+    "terminal_s": 1.383,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 81,
+    "crossing_w": [
+      0.58,
+      -0.5499996266666668,
+      0.8300781642365842
+    ],
+    "terminal_s": 1.888,
+    "table_contacts": 2,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 82,
+    "crossing_w": [
+      0.58,
+      -3.199999996675162e-07,
+      0.8421531490108466
+    ],
+    "terminal_s": 1.89,
+    "table_contacts": 2,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 83,
+    "crossing_w": [
+      0.58,
+      0.5499997600000011,
+      0.8112223066545898
+    ],
+    "terminal_s": 1.886,
+    "table_contacts": 2,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 84,
+    "crossing_w": [
+      0.58,
+      -0.020657894736842104,
+      1.1944882778897215
+    ],
+    "terminal_s": 1.334,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 85,
+    "crossing_w": [
+      0.58,
+      0.3249999573333319,
+      1.2379017544943187
+    ],
+    "terminal_s": 1.41,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 86,
+    "crossing_w": [
+      0.58,
+      -0.32499995733333154,
+      1.2379017544943185
+    ],
+    "terminal_s": 1.41,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 87,
+    "crossing_w": [
+      0.58,
+      -0.7500001750000006,
+      1.2563742139901437
+    ],
+    "terminal_s": 1.454,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 88,
+    "crossing_w": [
+      0.58,
+      -5.323434850496555e-34,
+      1.2676948818655833
+    ],
+    "terminal_s": 1.457,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 89,
+    "crossing_w": [
+      0.58,
+      0.7500001750000009,
+      1.2563742139901437
+    ],
+    "terminal_s": 1.454,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 90,
+    "crossing_w": [
+      0.58,
+      0.10986842105263148,
+      0.7922737363729945
+    ],
+    "terminal_s": 1.601,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 91,
+    "crossing_w": [
+      0.58,
+      -0.5000001399999956,
+      1.0928280641402623
+    ],
+    "terminal_s": 1.463,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 92,
+    "crossing_w": [
+      0.58,
+      0.5000001399999957,
+      1.0928280641402623
+    ],
+    "terminal_s": 1.463,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 93,
+    "crossing_w": [
+      0.58,
+      -0.9499996941176475,
+      1.3148164960085211
+    ],
+    "terminal_s": 1.454,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 94,
+    "crossing_w": [
+      0.58,
+      4.7058823496991676e-08,
+      1.322425573412581
+    ],
+    "terminal_s": 1.461,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 95,
+    "crossing_w": null,
+    "terminal_s": 0.804,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 96,
+    "crossing_w": [
+      0.58,
+      -0.6854999999999998,
+      0.987099600835251
+    ],
+    "terminal_s": 1.501,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 97,
+    "crossing_w": [
+      0.58,
+      0.15000071931387218,
+      1.2298120293057178
+    ],
+    "terminal_s": 1.505,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 98,
+    "crossing_w": [
+      0.58,
+      -0.15000071931387354,
+      1.2298120293057173
+    ],
+    "terminal_s": 1.505,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 99,
+    "crossing_w": [
+      0.58,
+      -0.5499997555555559,
+      1.2059528252786915
+    ],
+    "terminal_s": 1.548,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 100,
+    "crossing_w": [
+      0.58,
+      6.666666699354395e-08,
+      1.2009185644264384
+    ],
+    "terminal_s": 1.549,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 101,
+    "crossing_w": [
+      0.58,
+      0.5499998888888883,
+      1.2134293239908034
+    ],
+    "terminal_s": 1.546,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 102,
+    "crossing_w": [
+      0.58,
+      0.660499999999999,
+      0.987099600835251
+    ],
+    "terminal_s": 1.501,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 103,
+    "crossing_w": [
+      0.58,
+      -0.32500007384615565,
+      1.1873474543328228
+    ],
+    "terminal_s": 1.417,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 104,
+    "crossing_w": [
+      0.58,
+      0.3250000738461561,
+      1.1873474543328237
+    ],
+    "terminal_s": 1.417,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 105,
+    "crossing_w": [
+      0.58,
+      -0.7500003199999972,
+      0.9838658194983633
+    ],
+    "terminal_s": 1.405,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 106,
+    "crossing_w": [
+      0.58,
+      1.6927605601592984e-33,
+      1.0146633206790827
+    ],
+    "terminal_s": 1.408,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 107,
+    "crossing_w": [
+      0.58,
+      0.7500003199999971,
+      0.9838658194983636
+    ],
+    "terminal_s": 1.405,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 108,
+    "crossing_w": [
+      0.58,
+      -0.0246428571428566,
+      0.8907521845891175
+    ],
+    "terminal_s": 1.467,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 109,
+    "crossing_w": [
+      0.58,
+      0.500000114285717,
+      1.2576305441759146
+    ],
+    "terminal_s": 1.436,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 110,
+    "crossing_w": [
+      0.58,
+      -0.5000001142857173,
+      1.2576305441759146
+    ],
+    "terminal_s": 1.436,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 111,
+    "crossing_w": [
+      0.58,
+      -0.9499999499999974,
+      1.0426037668129184
+    ],
+    "terminal_s": 1.364,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 112,
+    "crossing_w": [
+      0.58,
+      1.7500000010605955e-07,
+      1.0930979804964236
+    ],
+    "terminal_s": 1.37,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 113,
+    "crossing_w": [
+      0.58,
+      0.950000299999998,
+      1.0633353343989387
+    ],
+    "terminal_s": 1.367,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 114,
+    "crossing_w": [
+      0.58,
+      0.0004999999999994477,
+      1.1208316515405896
+    ],
+    "terminal_s": 1.441,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 115,
+    "crossing_w": [
+      0.58,
+      -0.14999993600000247,
+      1.2516655194533748
+    ],
+    "terminal_s": 1.438,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 116,
+    "crossing_w": [
+      0.58,
+      0.14999993600000222,
+      1.2516655194533748
+    ],
+    "terminal_s": 1.438,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 117,
+    "crossing_w": [
+      0.58,
+      -0.5500000223845153,
+      1.3264286445353821
+    ],
+    "terminal_s": 1.499,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 118,
+    "crossing_w": [
+      0.58,
+      -4.7058823137233067e-08,
+      1.3229372663502668
+    ],
+    "terminal_s": 1.501,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 119,
+    "crossing_w": [
+      0.58,
+      0.5500000992552572,
+      1.3273841516842713
+    ],
+    "terminal_s": 1.497,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  },
+  {
+    "shot_id": 120,
+    "crossing_w": [
+      0.58,
+      -0.10550005205783547,
+      1.106226150606059
+    ],
+    "terminal_s": 1.346,
+    "table_contacts": 1,
+    "net_contacts": 0,
+    "error": null
+  }
+]
