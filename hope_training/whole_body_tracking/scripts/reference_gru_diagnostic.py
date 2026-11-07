@@ -76,6 +76,8 @@ def main():
     ap.add_argument('--view',action='store_true');ap.add_argument('--video',action='store_true')
     ap.add_argument('--table-impact-model',choices=['soft','ppq004'],default='soft')
     ap.add_argument('--pelvis-dropout-windows',default='',help='start:duration in seconds, comma separated')
+    ap.add_argument('--neutral-final-tail',action='store_true',help='Diagnostic neutral target after final ball release')
+    ap.add_argument('--neutral-expired-targets',action='store_true',help='Diagnostic neutral target after any expired strike deadline')
     ap.add_argument('--max-clock-lag-s',type=float,default=.05)
     a=ap.parse_args();out=a.output;out.mkdir(parents=True,exist_ok=False)
     dropout_windows=parse_dropout_windows(a.pelvis_dropout_windows)
@@ -117,6 +119,8 @@ def main():
     failure=None;fall_time=None;rally_stop_time=None;stop_launches=False;peak_lag=0.;cadence=[]
     home_q=plant.state().base_quat_w.copy();home_yaw=math.atan2(2*(home_q[0]*home_q[3]+home_q[1]*home_q[2]),1-2*(home_q[2]**2+home_q[3]**2))
     ema_speed=0.;last_valid_base_pos=None;last_valid_forward=None;dropout_ticks=0
+    neutral_tail_ticks=0;first_neutral_tail_s=None
+    neutral_expired_ticks=0;first_neutral_expired_s=None
 
     def before(t):
         nonlocal next_launch,next_index,current_id,release_at,tail_end,all_released,accepted_current,spawn_ns
@@ -180,8 +184,23 @@ def main():
             base_at_observation=plant.state().base_pos_w.copy()
             dropout=any(start<=t<end for start,end in dropout_windows)
             if plant.viewer is not None and not plant.viewer.is_running():raise RuntimeError('Viewer closed')
-            target=ObsTarget(plant.data.site_xpos[plant.racket].copy(),np.zeros(3),-1.) if last_target is None else planner_target(last_target.pos_w,last_target.vel_w,last_deadline,t)
-            source='idle_no_plan' if last_target is None else 'actual_live_planner'
+            expired=last_deadline is not None and t>=last_deadline+.5
+            neutral_tail=bool(a.neutral_final_tail and all_released and expired)
+            neutral_expired=bool(a.neutral_expired_targets and expired)
+            if last_target is None or neutral_tail or neutral_expired:
+                target=ObsTarget(plant.data.site_xpos[plant.racket].copy(),np.zeros(3),-1.)
+            else:
+                target=planner_target(last_target.pos_w,last_target.vel_w,last_deadline,t)
+            if neutral_expired:source='neutral_expired_target'
+            elif neutral_tail:source='neutral_final_tail'
+            elif last_target is None:source='idle_no_plan'
+            else:source='actual_live_planner'
+            if neutral_tail:
+                neutral_tail_ticks+=1
+                if first_neutral_tail_s is None:first_neutral_tail_s=t
+            if neutral_expired:
+                neutral_expired_ticks+=1
+                if first_neutral_expired_s is None:first_neutral_expired_s=t
             if not stop_launches:
                 obs=plant.observe(target)
                 if dropout:
@@ -306,6 +325,8 @@ def main():
             'table_impact_model':a.table_impact_model,'profile_sha256':pool.slots[0].profile['sha256'],
             'scheduled_ball_count':len(ledger),'falls':int(failure=='fall'),
             'pelvis_dropout_windows_s':dropout_windows,'pelvis_dropout_actor_ticks':dropout_ticks,
+            'neutral_final_tail':a.neutral_final_tail,'neutral_final_tail_ticks':neutral_tail_ticks,'first_neutral_final_tail_s':first_neutral_tail_s,
+            'neutral_expired_targets':a.neutral_expired_targets,'neutral_expired_target_ticks':neutral_expired_ticks,'first_neutral_expired_target_s':first_neutral_expired_s,
             'groups':groups,'rally_failure':failure,'fall_time_s':fall_time,'rally_stop_time_s':rally_stop_time,'error':error,
             'mujoco_warning_counts':plant.data.warning.number.tolist(),'post_failure_drain':'last controls held unchanged; no actor/planner action updates; bounded safe physical drain',
             'resets_after_initial':policy.reset_count-1,'peak_concurrent_balls':pool.peak_concurrent,

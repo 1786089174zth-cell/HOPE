@@ -24,6 +24,8 @@ def main():
  p.add_argument('--scene',type=Path,help='Explicit 100-ball scene; default is the published fixed-home baseline')
  p.add_argument('--preflight',action='store_true',help='Run the evaluator five-serve integration preflight')
  p.add_argument('--pelvis-dropout-windows',default='',help='Comma-separated simulation-time start:duration pairs in seconds')
+ p.add_argument('--neutral-final-tail',action='store_true',help='Diagnostic: stop feeding the final expired strike goal after all balls are released')
+ p.add_argument('--neutral-expired-targets',action='store_true',help='Diagnostic: use a neutral goal whenever the latest strike deadline has expired')
  p.add_argument('--output-root',type=Path,default=Path.home()/'hope-evaluations');p.add_argument('--planner',type=Path,default=Path(os.environ.get('HOPE_PLANNER_BINARY',ROOT/'hope_ws/install/hope_planner_cpp/lib/hope_planner_cpp/hope_planner_cpp_node')))
  p.add_argument('--ros-setup',type=Path,default=Path(os.environ.get('HOPE_ROS_SETUP',ROOT/'hope_ws/install/setup.bash')));p.add_argument('--ros-box',default=os.environ.get('HOPE_ROS_BOX','hope'));p.add_argument('--ros-host',action='store_true');p.add_argument('--ros-domain',type=int,default=187)
  p.add_argument('--ros-rmw',default=os.environ.get('HOPE_ROS_RMW',''),help='Existing ROS RMW implementation, e.g. rmw_cyclonedds_cpp')
@@ -63,6 +65,8 @@ def main():
   args=[sys.executable,str(scripts/'reference_gru_diagnostic.py'),'--bundle',str(a.bundle),'--scene',str(scene),'--socket',str(sock),'--output',str(attempt/'scored'),'--table-impact-model','ppq004','--max-clock-lag-s',str(a.max_clock_lag_s)]
   if a.record_video:args.append('--video')
   if a.pelvis_dropout_windows:args.extend(['--pelvis-dropout-windows',a.pelvis_dropout_windows])
+  if a.neutral_final_tail:args.append('--neutral-final-tail')
+  if a.neutral_expired_targets:args.append('--neutral-expired-targets')
   if a.preflight:args.append('--preflight')
   if a.view:args.append('--view')
   rc=subprocess.run(['timeout','--signal=INT','--kill-after=10','915',*args],check=False).returncode

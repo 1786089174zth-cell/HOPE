@@ -38,3 +38,13 @@ python hope_training/whole_body_tracking/scripts/run_model19000_mujoco.py \
 - 五球集成预检：[无扰动](nominal_preflight-summary.json)、[丢帧](dropout_preflight-summary.json)
 
 本次只评估 `model_19000`。原发布报告中的“100 球”表示发出并结算；该模型原报告同样在末尾恢复段发生 1 次跌倒，不等于 100 次成功回球或全程不倒。
+
+## 第 100 球后的跌倒：定位与诊断修正
+
+无扰动对照在最后一次规划目标的击球期限约 `149.107 s` 后，不再有新球目标，但评测器仍逐 tick 把上次击球位置、速度及不断递减的剩余时间送入 GRU。`target_source` 一直记录为 `actual_live_planner`；`150.0 s` 的剩余时间约 `-0.89 s`、倾角 `1.47°`，到 `153.0 s` 变为 `-3.89 s`、`64.64°` 并触发跌倒。该对照没有注入 pelvis 丢帧；第 100 球后不再有新规划命令是正常的发球停止，并非证实动捕信号断流。过期目标与失稳同时出现，单靠相关性不能定因。
+
+为隔离这个因素，评测器新增两个默认关闭的开关：`--neutral-final-tail` 在最后一球后、击球期限加 `0.5 s` 时，把目标置为当前球拍位置、速度零、剩余时间 `-1 s`；`--neutral-expired-targets` 在每次击球期限过后执行相同切换。GRU 隐藏状态、物理引擎、球序列和 ROS 规划器均保持原样。前者的对照重跑在 `150.46 s` 首次切换，`100/100` 球发出且接触、`0` 跌倒、`0` 重置，仿真走完整个 `153.48 s` 尾段；`153.0 s` 倾角 `3.87°`，而未切换对照为 `64.64°`。后者与五个 pelvis 丢帧窗口合并测试，也得到 `100/100` 发出与接触、`0` 跌倒、`0` 重置、`122` 个丢帧 actor tick、`877` 个中性目标 tick。该 A/B 结果强烈支持过期击球目标是末尾跌倒的直接诱因。
+
+复现：在上面的命令中不设 `--scene`，分别添加 `--neutral-final-tail`，或添加 `--neutral-expired-targets --pelvis-dropout-windows 21:0.04,43:0.2,61:1.0,90:0.2,120:1.0`。小型证据：[末尾切换汇总](neutral-final-tail-summary.json)、[逐球](neutral-final-tail-per-ball.csv)；[通用过期切换与丢帧汇总](neutral-expired-dropout-summary.json)、[逐球](neutral-expired-dropout-per-ball.csv)。完整逐 tick trace 和 ROS 日志在 WSL `/home/rog/hope-evaluations/model19000-fix/`。
+
+这仍是 MuJoCo 诊断开关，尚未接入实机。现场应分别处理规划目标过期与 pelvis 动捕过期：以单调时钟监测时间戳、拒绝无效/跳变位姿，短时保持最后有效位姿并限制目标变化，超出许可窗口后停止发球并平滑转入已验证的站立控制器；恢复时验证连续新帧再平滑接回。现有 C++ runner 有 mocap 失效转 PD_STAND 的路径，但发布的 GRU bundle 与现有实机 runner ABI 不兼容，不能用这里的仿真结果宣称硬件已安全。严格合格击球和合法落台仍为 `0`。
