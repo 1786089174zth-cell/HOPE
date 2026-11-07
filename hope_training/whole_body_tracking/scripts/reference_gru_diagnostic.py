@@ -42,6 +42,18 @@ def reference_ledger(scene_path):
     return rows,env
 
 
+def parse_dropout_windows(spec):
+    windows=[]
+    for item in filter(None,spec.split(',')):
+        start,duration=(float(v) for v in item.split(':'))
+        if not math.isfinite(start) or not math.isfinite(duration) or start<0 or duration<=0:
+            raise ValueError('Pelvis dropout windows require finite nonnegative start and positive duration')
+        windows.append((start,start+duration))
+    if any(windows[i][1]>windows[i+1][0] for i in range(len(windows)-1)):
+        raise ValueError('Pelvis dropout windows must be ordered and nonoverlapping')
+    return windows
+
+
 def advance_without_actor(plant):
     """Hold last actuator controls unchanged while draining a failed rally."""
     for i in range(plant.substeps):
@@ -63,7 +75,11 @@ def main():
     ap.add_argument('--socket',required=True);ap.add_argument('--preflight',action='store_true')
     ap.add_argument('--view',action='store_true');ap.add_argument('--video',action='store_true')
     ap.add_argument('--table-impact-model',choices=['soft','ppq004'],default='soft')
+    ap.add_argument('--pelvis-dropout-windows',default='',help='start:duration in seconds, comma separated')
+    ap.add_argument('--max-clock-lag-s',type=float,default=.05)
     a=ap.parse_args();out=a.output;out.mkdir(parents=True,exist_ok=False)
+    dropout_windows=parse_dropout_windows(a.pelvis_dropout_windows)
+    published_scene=a.scene.resolve()==(a.bundle.parent/'params/fixed-home-100.yaml').resolve()
     ledger,env=reference_ledger(a.scene);full_ledger=ledger
     if a.preflight:
         # Separate clean FH/BH + actual rapid FF/BH handoffs. No scored outcomes.
@@ -87,9 +103,11 @@ def main():
         'physics':pool.cfg,'pair_settings':pool.pair_settings,'table_impact_model':a.table_impact_model,'slots':9,'control_dt':plant.dt,
         'physics_dt':plant.model.opt.timestep,'initial_idle_s':20,'final_tail_s':3,
         'wall_timeout_s':150 if a.preflight else 900,'seed':0,
+        'pelvis_dropout_windows_s':dropout_windows,
+        'pelvis_dropout_contract':'hold last pelvis position and forward, zero station delta, keep gyro/gravity and joints live; omit planner base publish',
         'episode_timeouts_disabled':True,'reset_rule':'initial only; fall ends rally',
         'recovery':{'xy_m':.05,'speed_ema_mps':.12,'speed_ema_alpha':.2,'tilt_deg':12,'yaw_deg':5,'pelvis_min_m':.8,'continuous_dwell_s':.3},
-        'host_completion_clock_proxy_after_strike_s':.5,'minimum_command_lead_s':.04,'maximum_wall_clock_lag_s':.05,
+        'host_completion_clock_proxy_after_strike_s':.5,'minimum_command_lead_s':.04,'maximum_wall_clock_lag_s':a.max_clock_lag_s,
         'certification':'NOT_APPLICABLE_REFERENCE_SEQUENCE_DIAGNOSTIC','command':sys.argv})
     conn=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);conn.settimeout(.25);conn.connect(a.socket)
     channel=conn.makefile('rwb');obslog=(out/'policy-trace.jsonl').open('x');cmdlog=(out/'planner-commands.jsonl').open('x')
@@ -98,7 +116,7 @@ def main():
     last_target=None;last_deadline=None;accepted_current=False;spawn_ns=0
     failure=None;fall_time=None;rally_stop_time=None;stop_launches=False;peak_lag=0.;cadence=[]
     home_q=plant.state().base_quat_w.copy();home_yaw=math.atan2(2*(home_q[0]*home_q[3]+home_q[1]*home_q[2]),1-2*(home_q[2]**2+home_q[3]**2))
-    ema_speed=0.
+    ema_speed=0.;last_valid_base_pos=None;last_valid_forward=None;dropout_ticks=0
 
     def before(t):
         nonlocal next_launch,next_index,current_id,release_at,tail_end,all_released,accepted_current,spawn_ns
@@ -130,10 +148,12 @@ def main():
         subcount+=1
         if subcount%5:return
         lag=time.monotonic()-(begin+t);peak_lag=max(peak_lag,lag)
-        if lag>.05:raise RuntimeError(f'Realtime preflight/diagnostic clock lag {lag:.3f}s >50ms; wall-deadline validity not established')
+        if lag>a.max_clock_lag_s:raise RuntimeError(f'Realtime diagnostic clock lag {lag:.3f}s exceeds {a.max_clock_lag_s:.3f}s; wall-deadline validity not established')
         time.sleep(max(0,begin+t-time.monotonic()))
         state=plant.state();ball=pool.planner_ball()
+        dropout=any(start<=t<end for start,end in dropout_windows)
         request={'stamp_ns':int((unix_anchor+t)*1e9),'sim_t':t,'serve_id':ball.shot_id if ball else None,
+            'base_active':not dropout,
             'base_table':(state.base_pos_w-OFFSET).tolist(),'base_quat_wxyz':state.base_quat_w.tolist(),
             'ball_active':ball is not None,'ball_table':(ball.state()[0]-OFFSET).tolist() if ball else [0.,0.,0.],
             'ball_quat_wxyz':plant.data.qpos[ball.q+3:ball.q+7].tolist() if ball else [1.,0.,0.,0.]}
@@ -158,13 +178,23 @@ def main():
         while time.monotonic()-begin<wall_limit:
             t=plant.episode_time;actor_action=None
             base_at_observation=plant.state().base_pos_w.copy()
+            dropout=any(start<=t<end for start,end in dropout_windows)
             if plant.viewer is not None and not plant.viewer.is_running():raise RuntimeError('Viewer closed')
             target=ObsTarget(plant.data.site_xpos[plant.racket].copy(),np.zeros(3),-1.) if last_target is None else planner_target(last_target.pos_w,last_target.vel_w,last_deadline,t)
             source='idle_no_plan' if last_target is None else 'actual_live_planner'
             if not stop_launches:
                 obs=plant.observe(target)
+                if dropout:
+                    dropout_ticks+=1
+                    if last_valid_base_pos is not None:
+                        obs[99:101]=last_valid_forward
+                        obs[101:103]=0.
+                        obs[103:106]=target.pos_w-last_valid_base_pos
+                else:
+                    last_valid_base_pos=base_at_observation.copy()
+                    last_valid_forward=obs[99:101].copy()
                 if current_id is not None and accepted_current and obs[109]>0:rows[current_id]['positive_planner_observation_ticks']+=1
-                np.testing.assert_allclose(obs[103:106],target.pos_w-base_at_observation,atol=2e-7)
+                np.testing.assert_allclose(obs[103:106],target.pos_w-(last_valid_base_pos if dropout and last_valid_base_pos is not None else base_at_observation),atol=2e-7)
                 np.testing.assert_allclose(obs[106:109],target.vel_w,atol=2e-7)
                 action=policy.infer(obs);actor_action=action.tolist();plant.step(action)
             else:
@@ -189,7 +219,7 @@ def main():
                 'target_position_w':target.pos_w.tolist(),'target_velocity_w':target.vel_w.tolist(),'time_to_strike':target.time_to_strike,
                 'executed_qdes':plant.previous_qdes.tolist(),'hidden_norm':float(np.linalg.norm(policy.hidden)),'policy_reset_count':policy.reset_count,
                 'base_z':metric['base_z'],'drift_m':metric['drift_m'],'tilt_deg':metric['tilt_deg'],
-                'yaw_error_deg':yaw_error,'speed_ema':ema_speed,'rally_failed':stop_launches})+'\n')
+                'yaw_error_deg':yaw_error,'speed_ema':ema_speed,'pelvis_dropout':dropout,'rally_failed':stop_launches})+'\n')
             if render_states is not None and plant.episode_time+1e-8>=render_count/20.:
                 render_states.write(json.dumps({'sim_t':plant.episode_time,'qpos':plant.data.qpos.tolist(),
                     'target_position':last_target.pos_w.tolist() if last_target is not None else None,
@@ -224,7 +254,9 @@ def main():
             except Exception as e:error=(error or '')+'; video_close='+repr(e)
         try:channel.write(b'{"close":true}\n');channel.flush()
         except OSError:pass
-        channel.close();conn.close();trajectory.close();obslog.close();cmdlog.close()
+        try:channel.close()
+        except OSError:pass
+        conn.close();trajectory.close();obslog.close();cmdlog.close()
         if render_states is not None:render_states.close()
         physical=pool.score.report();by_id={r['shot_id']:r for r in physical['rows']}
         for shot_id,row in rows.items():
@@ -251,7 +283,7 @@ def main():
         thresholds=join_physical_evidence_by_side(joined,physical,min_samples_per_side=49,min_contact_rate=5/6,
             min_landing_rate=5/6,min_contacts_per_side=41,min_landings_per_side=41,
             min_landing_observations_per_side=41,min_global_contacts=84,min_global_landings=84,
-            min_global_landing_observations=84,allowed_landing_censor_lanes=()) if not a.preflight else {'status':'NOT_APPLICABLE: separate five-serve integration preflight, no benchmark threshold verdict'}
+            min_global_landing_observations=84,allowed_landing_censor_lanes=()) if not a.preflight and published_scene else {'status':'NOT_APPLICABLE: custom safety scene or five-serve preflight'}
         groups={}
         for label,group in [('nominal_forehand_lane',[r for r in rows.values() if r['position_table'][1]<-1.0125]),('nominal_backhand_lane',[r for r in rows.values() if r['position_table'][1]>=-1.0125]),('all',list(rows.values())),('forehand',[r for r in rows.values() if r['planner_side']=='forehand']),('backhand',[r for r in rows.values() if r['planner_side']=='backhand']),('unassigned',[r for r in rows.values() if r['planner_side'] is None])]:
             success=sum(r['end_to_end_success'] for r in group);delivery=sum(r['valid_delivery'] for r in group);contacts=sum(r['raw_contact'] for r in group);legal=sum(r['legal_landing'] for r in group)
@@ -268,11 +300,12 @@ def main():
                 'contact_conditioned_legal':rate(legal,contacts)}
         streak=best=0
         for row in rows.values():streak=streak+1 if row['end_to_end_success'] else 0;best=max(best,streak)
-        report={'label':'FIXED_HOME_100_REFERENCE_SEQUENCE_GRU_DIAGNOSTIC','formal_gate3_certification':'NOT_APPLICABLE','video_mode':'record actual states now; offline render after timing-critical evaluation','render_frames':render_count,
+        report={'label':'FIXED_HOME_100_REFERENCE_SEQUENCE_GRU_DIAGNOSTIC' if published_scene else 'CUSTOM_100_GRU_SAFETY_DIAGNOSTIC','formal_gate3_certification':'NOT_APPLICABLE','video_mode':'record actual states now; offline render after timing-critical evaluation','render_frames':render_count,
             'phase':'preflight' if a.preflight else '100-serve','iteration':policy.manifest['checkpoint_iteration'],
             'checkpoint_sha256':policy.manifest['checkpoint_sha256'],'onnx_sha256':policy.manifest['onnx_sha256'],
             'table_impact_model':a.table_impact_model,'profile_sha256':pool.slots[0].profile['sha256'],
             'scheduled_ball_count':len(ledger),'falls':int(failure=='fall'),
+            'pelvis_dropout_windows_s':dropout_windows,'pelvis_dropout_actor_ticks':dropout_ticks,
             'groups':groups,'rally_failure':failure,'fall_time_s':fall_time,'rally_stop_time_s':rally_stop_time,'error':error,
             'mujoco_warning_counts':plant.data.warning.number.tolist(),'post_failure_drain':'last controls held unchanged; no actor/planner action updates; bounded safe physical drain',
             'resets_after_initial':policy.reset_count-1,'peak_concurrent_balls':pool.peak_concurrent,

@@ -10,6 +10,7 @@ from pathlib import Path
 def main():
     p=argparse.ArgumentParser();p.add_argument('--socket',required=True);p.add_argument('--config',required=True)
     p.add_argument('--planner',required=True);p.add_argument('--namespace',required=True);p.add_argument('--output',required=True)
+    p.add_argument('--max-clock-skew-ms',type=float,default=50.)
     a=p.parse_args();out=Path(a.output);out.mkdir(parents=True,exist_ok=False)
     import rclpy
     from rclpy.node import Node
@@ -74,12 +75,12 @@ def main():
                 stamp=int(request['stamp_ns'])
                 if stamp<=last_stamp:raise RuntimeError('Nonmonotonic exposure timestamps')
                 last_stamp=stamp
-                if abs(time.time_ns()-stamp)>50_000_000:raise RuntimeError('Exposure/wall clock skew exceeds 50ms')
+                if abs(time.time_ns()-stamp)>a.max_clock_skew_ms*1_000_000:raise RuntimeError('Exposure/wall clock skew exceeds configured limit')
                 sec,nsec=divmod(stamp,1_000_000_000)
                 base=PoseStamped();base.header.frame_id='planner_table';base.header.stamp.sec=sec;base.header.stamp.nanosec=nsec
                 base.pose.position.x,base.pose.position.y,base.pose.position.z=request['base_table']
                 base.pose.orientation.w,base.pose.orientation.x,base.pose.orientation.y,base.pose.orientation.z=request['base_quat_wxyz']
-                rp.publish(base)
+                if request.get('base_active',True):rp.publish(base)
                 if request['ball_active']:
                     ball=PoseArray();ball.header=base.header;pose=Pose()
                     pose.position.x,pose.position.y,pose.position.z=request['ball_table']

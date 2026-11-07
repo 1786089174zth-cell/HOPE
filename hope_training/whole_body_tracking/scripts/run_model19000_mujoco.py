@@ -3,7 +3,7 @@
 Uses simulated inputs and the isolated ROS planner only. No hardware bridge,
 training, installation, automatic build, or old-bundle fallback is provided.
 """
-import argparse,json,os,shlex,signal,socket,subprocess,sys,tempfile,time
+import argparse,json,os,re,shlex,signal,socket,subprocess,sys,tempfile,time
 from pathlib import Path
 from mujoco_eval_recurrent import ROOT
 
@@ -12,16 +12,23 @@ DEFAULT_BUNDLE=ROOT/'a3_deploy/a3_deploy_example/models/model_19000/policy/expor
 def ros_command(args,bridge_args):
  setup=Path(args.ros_setup).resolve()
  if not setup.is_file():raise FileNotFoundError('ROS install setup missing: '+str(setup))
- command='set -eo pipefail\nsource /opt/ros/jazzy/setup.bash\nsource '+shlex.quote(str(setup))+'\n'
- command+='export ROS_DOMAIN_ID='+str(args.ros_domain)+' ROS_LOCALHOST_ONLY=1 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST\n'
+ command='set -eo pipefail; source /opt/ros/jazzy/setup.bash; source '+shlex.quote(str(setup))+'; '
+ command+='export ROS_DOMAIN_ID='+str(args.ros_domain)+' ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST; '
+ if args.ros_rmw:command+='export RMW_IMPLEMENTATION='+shlex.quote(args.ros_rmw)+'; '
  command+='exec '+shlex.join(['/usr/bin/python3',str(ROOT/'hope_training/whole_body_tracking/scripts/planner_ros_eval_bridge.py'),*bridge_args])
  return ['bash','-lc',command] if args.ros_host else ['distrobox','enter',args.ros_box,'--','bash','-lc',command]
 
 def main():
  p=argparse.ArgumentParser(description=__doc__)
  p.add_argument('--bundle',type=Path,default=DEFAULT_BUNDLE);p.add_argument('--view',action='store_true');p.add_argument('--replay',action='store_true');p.add_argument('--verify-only',action='store_true')
+ p.add_argument('--scene',type=Path,help='Explicit 100-ball scene; default is the published fixed-home baseline')
+ p.add_argument('--preflight',action='store_true',help='Run the evaluator five-serve integration preflight')
+ p.add_argument('--pelvis-dropout-windows',default='',help='Comma-separated simulation-time start:duration pairs in seconds')
  p.add_argument('--output-root',type=Path,default=Path.home()/'hope-evaluations');p.add_argument('--planner',type=Path,default=Path(os.environ.get('HOPE_PLANNER_BINARY',ROOT/'hope_ws/install/hope_planner_cpp/lib/hope_planner_cpp/hope_planner_cpp_node')))
  p.add_argument('--ros-setup',type=Path,default=Path(os.environ.get('HOPE_ROS_SETUP',ROOT/'hope_ws/install/setup.bash')));p.add_argument('--ros-box',default=os.environ.get('HOPE_ROS_BOX','hope'));p.add_argument('--ros-host',action='store_true');p.add_argument('--ros-domain',type=int,default=187)
+ p.add_argument('--ros-rmw',default=os.environ.get('HOPE_ROS_RMW',''),help='Existing ROS RMW implementation, e.g. rmw_cyclonedds_cpp')
+ p.add_argument('--max-clock-lag-s',type=float,default=.05,help='Diagnostic host lag limit; published baseline uses 0.05s')
+ p.add_argument('--max-clock-skew-ms',type=float,default=50.,help='Diagnostic bridge timestamp limit; published baseline uses 50ms')
  p.add_argument('--record-video',action='store_true',help='Render an actual-state MP4 after timing-critical simulation; original published videos remain unchanged')
  a=p.parse_args();a.bundle=a.bundle.resolve();m=json.loads((a.bundle/'manifest.json').read_text())
  if m['checkpoint_iteration']!=19000 or m['checkpoint_sha256']!='744526d2e7a9fdabe990070054ec3bd8126b286bc79041f94a930b0078c257c0':raise ValueError('Expected published model19000, no fallback')
@@ -40,11 +47,11 @@ def main():
  if a.verify_only:return
  if not a.planner.is_file():raise FileNotFoundError('Provide an existing ROS planner binary with --planner (see model README); no automatic build')
  import yaml
- config=json.loads((a.bundle.parent/'params/planner-parameters.json').read_text());ns='hope_gru_'+attempt.name.replace('-','_');config.update(robot_pose_topic='/'+ns+'/base',debug_session_id=ns,debug_csv_path=str(attempt/'ros/planner-audit.csv'))
+ config=json.loads((a.bundle.parent/'params/planner-parameters.json').read_text());ns='hope_gru_'+re.sub('_+','_',attempt.name.replace('-','_'));config.update(robot_pose_topic='/'+ns+'/base',debug_session_id=ns,debug_csv_path=str(attempt/'ros/planner-audit.csv'))
  config_file=attempt/'planner.yaml';config_file.write_text(yaml.safe_dump({'/**':{'ros__parameters':config}},sort_keys=False))
  cache=Path(os.environ.get('XDG_CACHE_HOME',Path.home()/'.cache'));cache.mkdir(parents=True,exist_ok=True)
  transport=Path(tempfile.mkdtemp(prefix='hope-gru-',dir=cache));sock=transport/'planner.sock'
- bridge_args=['--socket',str(sock),'--config',str(config_file),'--planner',str(a.planner.resolve()),'--namespace',ns,'--output',str(attempt/'ros')]
+ bridge_args=['--socket',str(sock),'--config',str(config_file),'--planner',str(a.planner.resolve()),'--namespace',ns,'--output',str(attempt/'ros'),'--max-clock-skew-ms',str(a.max_clock_skew_ms)]
  log=(attempt/'bridge.log').open('w');bridge=subprocess.Popen(ros_command(a,bridge_args),stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
  rc=1;bridge_rc=None
  try:
@@ -52,7 +59,11 @@ def main():
   while not sock.exists():
    if bridge.poll() is not None or time.monotonic()>until:raise RuntimeError('Isolated ROS planner failed to start; inspect '+str(attempt/'bridge.log'))
    time.sleep(.1)
-  args=[sys.executable,str(scripts/'reference_gru_diagnostic.py'),'--bundle',str(a.bundle),'--scene',str(a.bundle.parent/'params/fixed-home-100.yaml'),'--socket',str(sock),'--output',str(attempt/'scored'),'--table-impact-model','ppq004','--video']
+  scene=a.scene.resolve() if a.scene else a.bundle.parent/'params/fixed-home-100.yaml'
+  args=[sys.executable,str(scripts/'reference_gru_diagnostic.py'),'--bundle',str(a.bundle),'--scene',str(scene),'--socket',str(sock),'--output',str(attempt/'scored'),'--table-impact-model','ppq004','--max-clock-lag-s',str(a.max_clock_lag_s)]
+  if a.record_video:args.append('--video')
+  if a.pelvis_dropout_windows:args.extend(['--pelvis-dropout-windows',a.pelvis_dropout_windows])
+  if a.preflight:args.append('--preflight')
   if a.view:args.append('--view')
   rc=subprocess.run(['timeout','--signal=INT','--kill-after=10','915',*args],check=False).returncode
   bridge_rc=bridge.wait(timeout=12)

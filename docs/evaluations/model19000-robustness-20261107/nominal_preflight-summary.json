@@ -1,0 +1,279 @@
+{
+  "label": "FIXED_HOME_100_REFERENCE_SEQUENCE_GRU_DIAGNOSTIC",
+  "formal_gate3_certification": "NOT_APPLICABLE",
+  "video_mode": "record actual states now; offline render after timing-critical evaluation",
+  "render_frames": 680,
+  "phase": "preflight",
+  "iteration": 19000,
+  "checkpoint_sha256": "744526d2e7a9fdabe990070054ec3bd8126b286bc79041f94a930b0078c257c0",
+  "onnx_sha256": "f3f56fe7e0c31f94bea1645fae8d2f776dca01033f2c895d850bf5c708801dda",
+  "table_impact_model": "ppq004",
+  "profile_sha256": "df55e82102e0d5624732ea7ea03f6d98053f45d7f036367e3df3551a1c88a6f9",
+  "scheduled_ball_count": 5,
+  "falls": 0,
+  "pelvis_dropout_windows_s": [],
+  "pelvis_dropout_actor_ticks": 0,
+  "groups": {
+    "nominal_forehand_lane": {
+      "scheduled_or_assigned": 3,
+      "launched": 3,
+      "unlaunched": 0,
+      "raw_contacts": 3,
+      "qualified_contacts": 0,
+      "legal_landings": 0,
+      "net_contacts": 0,
+      "misses": 0,
+      "valid_deliveries": 3,
+      "planner_on_time": 3,
+      "planner_failures": 0,
+      "failed_returns": 3,
+      "unresolved": 0,
+      "interrupted": 0,
+      "recovery_dwell_pass": 0,
+      "end_to_end": {
+        "numerator": 0,
+        "denominator": 3,
+        "rate": 0.0
+      },
+      "valid_delivery_conditioned": {
+        "numerator": 0,
+        "denominator": 3,
+        "rate": 0.0
+      },
+      "contact_conditioned_legal": {
+        "numerator": 0,
+        "denominator": 3,
+        "rate": 0.0
+      }
+    },
+    "nominal_backhand_lane": {
+      "scheduled_or_assigned": 2,
+      "launched": 2,
+      "unlaunched": 0,
+      "raw_contacts": 2,
+      "qualified_contacts": 0,
+      "legal_landings": 0,
+      "net_contacts": 0,
+      "misses": 0,
+      "valid_deliveries": 2,
+      "planner_on_time": 2,
+      "planner_failures": 0,
+      "failed_returns": 2,
+      "unresolved": 0,
+      "interrupted": 0,
+      "recovery_dwell_pass": 0,
+      "end_to_end": {
+        "numerator": 0,
+        "denominator": 2,
+        "rate": 0.0
+      },
+      "valid_delivery_conditioned": {
+        "numerator": 0,
+        "denominator": 2,
+        "rate": 0.0
+      },
+      "contact_conditioned_legal": {
+        "numerator": 0,
+        "denominator": 2,
+        "rate": 0.0
+      }
+    },
+    "all": {
+      "scheduled_or_assigned": 5,
+      "launched": 5,
+      "unlaunched": 0,
+      "raw_contacts": 5,
+      "qualified_contacts": 0,
+      "legal_landings": 0,
+      "net_contacts": 0,
+      "misses": 0,
+      "valid_deliveries": 5,
+      "planner_on_time": 5,
+      "planner_failures": 0,
+      "failed_returns": 5,
+      "unresolved": 0,
+      "interrupted": 0,
+      "recovery_dwell_pass": 0,
+      "end_to_end": {
+        "numerator": 0,
+        "denominator": 5,
+        "rate": 0.0
+      },
+      "valid_delivery_conditioned": {
+        "numerator": 0,
+        "denominator": 5,
+        "rate": 0.0
+      },
+      "contact_conditioned_legal": {
+        "numerator": 0,
+        "denominator": 5,
+        "rate": 0.0
+      }
+    },
+    "forehand": {
+      "scheduled_or_assigned": 3,
+      "launched": 3,
+      "unlaunched": 0,
+      "raw_contacts": 3,
+      "qualified_contacts": 0,
+      "legal_landings": 0,
+      "net_contacts": 0,
+      "misses": 0,
+      "valid_deliveries": 3,
+      "planner_on_time": 3,
+      "planner_failures": 0,
+      "failed_returns": 3,
+      "unresolved": 0,
+      "interrupted": 0,
+      "recovery_dwell_pass": 0,
+      "end_to_end": {
+        "numerator": 0,
+        "denominator": 3,
+        "rate": 0.0
+      },
+      "valid_delivery_conditioned": {
+        "numerator": 0,
+        "denominator": 3,
+        "rate": 0.0
+      },
+      "contact_conditioned_legal": {
+        "numerator": 0,
+        "denominator": 3,
+        "rate": 0.0
+      }
+    },
+    "backhand": {
+      "scheduled_or_assigned": 2,
+      "launched": 2,
+      "unlaunched": 0,
+      "raw_contacts": 2,
+      "qualified_contacts": 0,
+      "legal_landings": 0,
+      "net_contacts": 0,
+      "misses": 0,
+      "valid_deliveries": 2,
+      "planner_on_time": 2,
+      "planner_failures": 0,
+      "failed_returns": 2,
+      "unresolved": 0,
+      "interrupted": 0,
+      "recovery_dwell_pass": 0,
+      "end_to_end": {
+        "numerator": 0,
+        "denominator": 2,
+        "rate": 0.0
+      },
+      "valid_delivery_conditioned": {
+        "numerator": 0,
+        "denominator": 2,
+        "rate": 0.0
+      },
+      "contact_conditioned_legal": {
+        "numerator": 0,
+        "denominator": 2,
+        "rate": 0.0
+      }
+    },
+    "unassigned": {
+      "scheduled_or_assigned": 0,
+      "launched": 0,
+      "unlaunched": 0,
+      "raw_contacts": 0,
+      "qualified_contacts": 0,
+      "legal_landings": 0,
+      "net_contacts": 0,
+      "misses": 0,
+      "valid_deliveries": 0,
+      "planner_on_time": 0,
+      "planner_failures": 0,
+      "failed_returns": 0,
+      "unresolved": 0,
+      "interrupted": 0,
+      "recovery_dwell_pass": 0,
+      "end_to_end": {
+        "numerator": 0,
+        "denominator": 0,
+        "rate": null
+      },
+      "valid_delivery_conditioned": {
+        "numerator": 0,
+        "denominator": 0,
+        "rate": null
+      },
+      "contact_conditioned_legal": {
+        "numerator": 0,
+        "denominator": 0,
+        "rate": null
+      }
+    }
+  },
+  "rally_failure": null,
+  "fall_time_s": null,
+  "rally_stop_time_s": null,
+  "error": null,
+  "mujoco_warning_counts": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "post_failure_drain": "last controls held unchanged; no actor/planner action updates; bounded safe physical drain",
+  "resets_after_initial": 0,
+  "peak_concurrent_balls": 3,
+  "remaining_live_ids": [],
+  "longest_success_streak": 0,
+  "peak_clock_lag_s": 0.005712028000516511,
+  "reset_free_segment": {
+    "count": 5,
+    "launched_shot_ids": [
+      1,
+      2,
+      7,
+      8,
+      9
+    ],
+    "ends_at_fall": false
+  },
+  "initial_idle_s": 20.0,
+  "final_tail_end_s": 33.957446575164795,
+  "integration_preflight_pass": true,
+  "cadence": [
+    {
+      "shot_id": 2,
+      "gap_s": 3.4999999999999254,
+      "expected_s": 3.5,
+      "error_s": -7.460698725481052e-14
+    },
+    {
+      "shot_id": 7,
+      "gap_s": 3.4999999999999254,
+      "expected_s": 3.5,
+      "error_s": -7.460698725481052e-14
+    },
+    {
+      "shot_id": 8,
+      "gap_s": 1.1499999999999773,
+      "expected_s": 1.15,
+      "error_s": -2.2648549702353193e-14
+    },
+    {
+      "shot_id": 9,
+      "gap_s": 1.1499999999999737,
+      "expected_s": 1.15,
+      "error_s": -2.6201263381153694e-14
+    }
+  ],
+  "cadence_within_reference_0_10s": true,
+  "reference_physical_thresholds": {
+    "status": "NOT_APPLICABLE: separate five-serve integration preflight, no benchmark threshold verdict"
+  },
+  "simulated_seconds": 33.97999999999971,
+  "wall_seconds": 33.98149765300013,
+  "last_recovery_dwell_pass": false,
+  "lifecycle_difference": "Host deadline+0.5s completion proxy, not native preempt/native completion telemetry; no reset or rescue.",
+  "physics_difference": "MuJoCo soft contacts; table uses saved PPQ004 law only at actual table-contact edge, 1ms quantized with no position change; racket remains MuJoCo soft mesh contact. Reference strict edge-velocity qualification is NOT relaxed.",
+  "drain_pass": true
+}
