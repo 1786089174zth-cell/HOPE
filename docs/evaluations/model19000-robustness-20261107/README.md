@@ -58,3 +58,15 @@ python hope_training/whole_body_tracking/scripts/run_model19000_mujoco.py \
 证据：[重放规划命令](wide-planner-command-replay.json)、[汇总](wide-dropout-replay-summary.json)、[逐球](wide-dropout-replay-per-ball.csv)、[桥接记录](wide-dropout-replay-bridge.txt)、[来源说明和哈希](wide-dropout-replay-provenance.json)；完整逐 tick trace、球轨迹和录制状态在 WSL `/home/rog/hope-evaluations/model19000-wide-replay-3pHEQX/scored/`。重放脚本为 `hope_training/whole_body_tracking/scripts/planner_command_replay_bridge.py`，诊断器使用原宽分布场景、`--neutral-final-tail --pelvis-dropout-windows 21:0.04,43:0.2,61:1.0,90:0.2,120:1.0 --sensor-stride 20 --video`。
 
 **限制：**命令来自无丢帧的原宽分布运行，重放不验证实时规划器在 pelvis 断流后的新决策或 ROS 端到端时限。50 Hz 是命令重放传输率，不是原实时规划器的 200 Hz 传感器率；该结果是策略/物理稳定性诊断，不能替代完整的实时联测或实机安全验收。原始球拍接触也不等于合法回球。
+
+## 三维混合来球与五段 pelvis 丢帧：90 球
+
+这组按 `model19000-mixed-3d-90.yaml` 连续发出 90 球：前 6 球为名义基准，之后把中线、左侧、右侧、低球、高球、斜向球各 14 个交错排列。混合球发球台面坐标 `y=-1.505～-0.096 m`、`z=0.327～0.808 m`，`vx=-4.255～-2.940 m/s`、`vy=-1.256～1.526 m/s`、`vz=1.781～2.844 m/s`，水平偏转角最大 `21.53°`。实测 14 个中线球在机器人击球平面全部通过，世界坐标 `|y|≤0.0266 m`，故中线球确实瞄准了机器人中间。场景使用确定性种子 `19000`，各球参数见逐球场景表。
+
+先以 100 Hz 仿真传感器驱动真实 C++ ROS 规划器收集目标。120 球原场景的前 90 球全部发出并完成物理轨迹，其中 89 球得到及时规划，第 50 球没有接受的规划命令；第 91 球在台面连续小幅弹跳，触发 PPQ004 “碰撞后 50 ms 未分离”保护，因此不将 120 球尝试报告为通过。90 球场景是该 120 球场景的完全相同前缀；重放文件只提取这 90 球的真实规划命令，并逐球检查场景参数一致。
+
+把 89 条规划命令按原仿真时刻重放到 `model_19000` 的 50 Hz 连续 GRU / 1 ms MuJoCo 物理运行，同时注入 `21:0.04,43:0.2,61:1.0,90:0.2,120:1.0` 秒的五段 pelvis 丢帧，并启用 `--neutral-expired-targets --neutral-final-tail`。结果：**90/90 球发出并结算，71 次原始球拍接触，19 次漏接，0 次摔倒，0 次重置，0 次数值报警**；五段丢帧覆盖 122 个 actor tick，完整仿真 `141.98 s`，最大倾角 `4.02°`，最低 base 高度 `1.057 m`。原始接触按类别为：中线 `14/14`、左 `12/14`、右 `2/14`、低 `14/14`、高 `11/14`、斜向 `12/14`，另有名义球 `6/6`。右侧明显是这次分布的弱点；该结果满足本轮“不摔倒、允许漏接”的仿真判据，但接球泛化并不均匀。严格合格击球和合法回球仍不能由这些原始接触数推出。
+
+证据：[90 球场景](model19000-mixed-3d-90.yaml)、[发球参数和类别](model19000-mixed-3d-90-shots.csv)、[规划命令重放](mixed-3d-90-planner-command-replay.json)、[汇总](mixed-3d-90-dropout-summary.json)、[逐球结果](mixed-3d-90-dropout-per-ball.csv)、[桥接计数](mixed-3d-90-dropout-bridge.txt)、[来源及哈希](mixed-3d-90-dropout-provenance.json)。生成器为 `hope_training/whole_body_tracking/scripts/generate_model19000_mixed_3d.py`，命令整理器为 `hope_training/whole_body_tracking/scripts/build_model19000_planner_replay.py`。完整 trace、实际球轨迹、逐帧录像状态保存在 WSL `/home/rog/hope-evaluations/model19000-mixed-replay-DTCqIz/scored/`。
+
+**范围：**这是记录规划目标的重放测试；丢帧发生在 GRU 观测中，未验证实时规划器面对 pelvis 信号中断时的行为，也未完成 ROS 端到端实时验收。不能据此推断实机已保证不倒。

@@ -1,0 +1,64 @@
+{
+  "schema": "hope_model19000_mixed_3d_90_dropout_replay_provenance_v1",
+  "scene_sha256": "561fd0b4a2bac8fa39df8b82129841042e83ad60cef97669d293e84b275f2211",
+  "source_scene_sha256": "6a6b7220059a355072470223daf8cfe398f972439afa35d263ead354d0a030d3",
+  "source_run": "model19000-tj2hrfv8",
+  "source_prefix": "shots 1-90 all trajectory-complete before later source failure on shot 91",
+  "planner_commands_sha256": "afac656445f1eda25d5f05446c0554dc873741a6242e603922c668d79b1bf710",
+  "actor_run": "model19000-mixed-replay-DTCqIz",
+  "summary_sha256": "8e92f3504b21ff24abb73dab5f2ca782cb39cd504f87d56fd53ddc64b2b54011",
+  "categories": {
+    "nominal": {
+      "scheduled": 6,
+      "raw_contacts": 6,
+      "misses": 0,
+      "valid_deliveries": 6,
+      "planner_on_time": 6
+    },
+    "center": {
+      "scheduled": 14,
+      "raw_contacts": 14,
+      "misses": 0,
+      "valid_deliveries": 14,
+      "planner_on_time": 14
+    },
+    "left": {
+      "scheduled": 14,
+      "raw_contacts": 12,
+      "misses": 2,
+      "valid_deliveries": 14,
+      "planner_on_time": 14
+    },
+    "right": {
+      "scheduled": 14,
+      "raw_contacts": 2,
+      "misses": 12,
+      "valid_deliveries": 14,
+      "planner_on_time": 14
+    },
+    "low": {
+      "scheduled": 14,
+      "raw_contacts": 14,
+      "misses": 0,
+      "valid_deliveries": 14,
+      "planner_on_time": 14
+    },
+    "high": {
+      "scheduled": 14,
+      "raw_contacts": 11,
+      "misses": 3,
+      "valid_deliveries": 11,
+      "planner_on_time": 13
+    },
+    "oblique": {
+      "scheduled": 14,
+      "raw_contacts": 12,
+      "misses": 2,
+      "valid_deliveries": 13,
+      "planner_on_time": 14
+    }
+  },
+  "max_tilt_deg": 4.017477408001336,
+  "min_base_z_m": 1.057089375334959,
+  "limits": "Recorded live C++ planner commands are replayed during actor test; planner response to pelvis dropout and live ROS timing are not tested. Raw racket contact does not imply legal return or real hardware safety."
+}

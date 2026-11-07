@@ -21,11 +21,12 @@ def ros_command(args,bridge_args):
 def main():
  p=argparse.ArgumentParser(description=__doc__)
  p.add_argument('--bundle',type=Path,default=DEFAULT_BUNDLE);p.add_argument('--view',action='store_true');p.add_argument('--replay',action='store_true');p.add_argument('--verify-only',action='store_true')
- p.add_argument('--scene',type=Path,help='Explicit 100-ball scene; default is the published fixed-home baseline')
+ p.add_argument('--scene',type=Path,help='Explicit fixed-home scene; default is the published 100-ball baseline')
  p.add_argument('--preflight',action='store_true',help='Run the evaluator five-serve integration preflight')
  p.add_argument('--pelvis-dropout-windows',default='',help='Comma-separated simulation-time start:duration pairs in seconds')
  p.add_argument('--neutral-final-tail',action='store_true',help='Diagnostic: stop feeding the final expired strike goal after all balls are released')
  p.add_argument('--neutral-expired-targets',action='store_true',help='Diagnostic: use a neutral goal whenever the latest strike deadline has expired')
+ p.add_argument('--planner-only',action='store_true',help='Collect live C++ planner commands with the robot held at home; not an actor safety result')
  p.add_argument('--sensor-stride',type=int,choices=(5,10,12,20),default=5,help='Physics steps between ROS sensor publishes: 5=200 Hz, 10=100 Hz, 12=83 Hz, 20=50 Hz')
  p.add_argument('--output-root',type=Path,default=Path.home()/'hope-evaluations');p.add_argument('--planner',type=Path,default=Path(os.environ.get('HOPE_PLANNER_BINARY',ROOT/'hope_ws/install/hope_planner_cpp/lib/hope_planner_cpp/hope_planner_cpp_node')))
  p.add_argument('--ros-setup',type=Path,default=Path(os.environ.get('HOPE_ROS_SETUP',ROOT/'hope_ws/install/setup.bash')));p.add_argument('--ros-box',default=os.environ.get('HOPE_ROS_BOX','hope'));p.add_argument('--ros-host',action='store_true');p.add_argument('--ros-domain',type=int,default=187)
@@ -42,14 +43,16 @@ def main():
   player=shutil.which('ffplay')
   command=[player,'-autoexit','-ss','20',str(movie)] if player else ['xdg-open',str(movie)]
   raise SystemExit(subprocess.call(command))
+ scene=a.scene.resolve() if a.scene else a.bundle.parent/'params/fixed-home-100.yaml'
+ import yaml
+ scene_balls=yaml.safe_load(scene.read_text())['balls']
  a.output_root.mkdir(parents=True,exist_ok=True);attempt=Path(tempfile.mkdtemp(prefix='model19000-',dir=a.output_root))
  scripts=ROOT/'hope_training/whole_body_tracking/scripts'
- print(f'Checkpoint19000 | run {m["wandb_run_id"]} | bundle {a.bundle}\nTable PPQ004 | profile {m["task"]["ball_physics"]["sha256"]} |100 scheduled balls | first serve20s\nOutput {attempt}',flush=True)
+ print(f'Checkpoint19000 | run {m["wandb_run_id"]} | bundle {a.bundle}\nTable PPQ004 | profile {m["task"]["ball_physics"]["sha256"]} |{scene_balls} scheduled balls | first serve20s\nOutput {attempt}',flush=True)
  subprocess.run([sys.executable,str(scripts/'mujoco_eval_recurrent.py'),'--bundle',str(a.bundle),'--physical-ball','--verify-only','--output-dir',str(attempt/'verification')],check=True)
  subprocess.run([sys.executable,str(scripts/'verify_bundle_reset.py'),'--bundle',str(a.bundle),'--output',str(attempt/'reset.json')],check=True)
  if a.verify_only:return
  if not a.planner.is_file():raise FileNotFoundError('Provide an existing ROS planner binary with --planner (see model README); no automatic build')
- import yaml
  config=json.loads((a.bundle.parent/'params/planner-parameters.json').read_text());ns='hope_gru_'+re.sub('_+','_',attempt.name.replace('-','_'));config.update(robot_pose_topic='/'+ns+'/base',debug_session_id=ns,debug_csv_path=str(attempt/'ros/planner-audit.csv'))
  config_file=attempt/'planner.yaml';config_file.write_text(yaml.safe_dump({'/**':{'ros__parameters':config}},sort_keys=False))
  cache=Path(os.environ.get('XDG_CACHE_HOME',Path.home()/'.cache'));cache.mkdir(parents=True,exist_ok=True)
@@ -62,12 +65,12 @@ def main():
   while not sock.exists():
    if bridge.poll() is not None or time.monotonic()>until:raise RuntimeError('Isolated ROS planner failed to start; inspect '+str(attempt/'bridge.log'))
    time.sleep(.1)
-  scene=a.scene.resolve() if a.scene else a.bundle.parent/'params/fixed-home-100.yaml'
   args=[sys.executable,str(scripts/'reference_gru_diagnostic.py'),'--bundle',str(a.bundle),'--scene',str(scene),'--socket',str(sock),'--output',str(attempt/'scored'),'--table-impact-model','ppq004','--max-clock-lag-s',str(a.max_clock_lag_s)]
   if a.record_video:args.append('--video')
   if a.pelvis_dropout_windows:args.extend(['--pelvis-dropout-windows',a.pelvis_dropout_windows])
   if a.neutral_final_tail:args.append('--neutral-final-tail')
   if a.neutral_expired_targets:args.append('--neutral-expired-targets')
+  if a.planner_only:args.append('--planner-only')
   args.extend(['--sensor-stride',str(a.sensor_stride)])
   if a.preflight:args.append('--preflight')
   if a.view:args.append('--view')
