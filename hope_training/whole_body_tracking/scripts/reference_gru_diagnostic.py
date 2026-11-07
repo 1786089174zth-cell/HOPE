@@ -1,4 +1,4 @@
-"""Audited fixed-home-100 sequence with carried GRU and concurrent real balls.
+"""Fixed-home sequence with original stateless/carried GRU actors and real balls.
 
 Diagnostic only: actual ROS C++ Planner required; native Runner ABI/certification
 is not emulated. Fall ends inference/launching, then physical flights drain.
@@ -94,7 +94,14 @@ def main():
             'raw_contact':False,'qualified_contact':False,'legal_landing':False,
             'trajectory_complete':False,'end_to_end_success':False} for s in ledger}
     dump(out/'ledger.json',ledger);dump(out/'reference-environment.json',env)
-    policy=RecurrentOnnxPolicy(a.bundle);plant=Plant(policy.manifest,physical=True,ball_slots=9,table_impact_model=a.table_impact_model)
+    schema=json.loads((a.bundle/'manifest.json').read_text())['schema']
+    if schema=='hope_feedforward_mujoco_v1':
+        from feedforward_eval_policy import FeedForwardEvalPolicy
+        policy=FeedForwardEvalPolicy(a.bundle)
+    else:
+        policy=RecurrentOnnxPolicy(a.bundle)
+    architecture='gru' if hasattr(policy,'hidden') else 'feedforward'
+    plant=Plant(policy.manifest,physical=True,ball_slots=9,table_impact_model=a.table_impact_model)
     trajectory=(out/'ball-trajectories.jsonl').open('x')
     pool=ConcurrentBalls(plant,rows.keys(),trajectory=lambda x:trajectory.write(json.dumps(x)+'\n'))
     policy.reset_episode()  # Exactly once for this process, never per ball/handoff.
@@ -150,7 +157,7 @@ def main():
                 cadence.append({'shot_id':current_id,'gap_s':gap,'expected_s':expected,'error_s':gap-expected})
             next_index+=1;accepted_current=False;spawn_ns=int((unix_anchor+t)*1e9)
             release_at=t+serve['flight_s']
-            print(f'LAUNCH shot={current_id} t={t:.3f} active={pool.live} hidden=CARRIED',flush=True)
+            print(f'LAUNCH shot={current_id} t={t:.3f} active={pool.live} policy={architecture}',flush=True)
 
     def after(t):
         nonlocal subcount,last_target,last_deadline,accepted_current,peak_lag
@@ -250,7 +257,7 @@ def main():
             obslog.write(json.dumps({'sim_t':t,'observation':obs.tolist() if obs is not None else None,'target_source':source,
                 'actions':actor_action,'base_at_observation':base_at_observation.tolist(),
                 'target_position_w':target.pos_w.tolist(),'target_velocity_w':target.vel_w.tolist(),'time_to_strike':target.time_to_strike,
-                'executed_qdes':plant.previous_qdes.tolist(),'hidden_norm':float(np.linalg.norm(policy.hidden)),'policy_reset_count':policy.reset_count,
+                'executed_qdes':plant.previous_qdes.tolist(),'hidden_norm':float(np.linalg.norm(policy.hidden)) if architecture=='gru' else None,'policy_reset_count':policy.reset_count,
                 'base_z':metric['base_z'],'drift_m':metric['drift_m'],'tilt_deg':metric['tilt_deg'],
                 'yaw_error_deg':yaw_error,'speed_ema':ema_speed,'pelvis_dropout':dropout,'rally_failed':stop_launches})+'\n')
             if render_states is not None and plant.episode_time+1e-8>=render_count/20.:
@@ -333,7 +340,7 @@ def main():
                 'contact_conditioned_legal':rate(legal,contacts)}
         streak=best=0
         for row in rows.values():streak=streak+1 if row['end_to_end_success'] else 0;best=max(best,streak)
-        report={'label':'PLANNER_ONLY_TARGET_COLLECTION' if a.planner_only else ('FIXED_HOME_100_REFERENCE_SEQUENCE_GRU_DIAGNOSTIC' if published_scene else 'CUSTOM_GRU_SAFETY_DIAGNOSTIC'),'formal_gate3_certification':'NOT_APPLICABLE','video_mode':'record actual states now; offline render after timing-critical evaluation','render_frames':render_count,
+        report={'label':'PLANNER_ONLY_TARGET_COLLECTION' if a.planner_only else ('CUSTOM_FEEDFORWARD_SAFETY_DIAGNOSTIC' if architecture=='feedforward' else ('FIXED_HOME_100_REFERENCE_SEQUENCE_GRU_DIAGNOSTIC' if published_scene else 'CUSTOM_GRU_SAFETY_DIAGNOSTIC')),'architecture':architecture,'formal_gate3_certification':'NOT_APPLICABLE','video_mode':'record actual states now; offline render after timing-critical evaluation','render_frames':render_count,
             'phase':'preflight' if a.preflight else f'{len(ledger)}-serve','iteration':policy.manifest['checkpoint_iteration'],
             'checkpoint_sha256':policy.manifest['checkpoint_sha256'],'onnx_sha256':policy.manifest['onnx_sha256'],
             'table_impact_model':a.table_impact_model,'profile_sha256':pool.slots[0].profile['sha256'],

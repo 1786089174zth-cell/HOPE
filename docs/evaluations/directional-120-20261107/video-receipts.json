@@ -24,5 +24,20 @@
     "initial_idle_preserved": true,
     "semantics": "Recorded actual qpos and measured trajectory playback; no actor inference, planner solve, new collision or score computed during rendering.",
     "wide_view": true
+  },
+  "14600": {
+    "video_filename": "model14600-directional-120-dropout.mp4",
+    "sha256": "0215cf38a295251f6a53c90e999fa35921f606e2fa55dadc6ecec67853f898f3",
+    "bytes": 5598405,
+    "frames": 4095,
+    "fps": 20,
+    "duration_s": 204.75,
+    "container_duration": "00:03:24.75",
+    "decode_check": "ffmpeg full decode PASS",
+    "architecture": "feedforward_no_GRU",
+    "initial_idle_preserved": true,
+    "wide_view": true,
+    "shadows_and_reflections": false,
+    "semantics": "Recorded actual qpos and measured trajectory playback; no actor inference, planner solve, new collision or score computed during rendering."
   }
 }

@@ -1,0 +1,28 @@
+{
+  "result": "PASS",
+  "architecture": "feedforward",
+  "onnx_sha256": "a987240610bb9a49ea42da8eafcdc84c3cfbc8d5470bf7ff1a2d7f1f624cdd28",
+  "checkpoint_sha256": "20053e683cdbefb24575299b8b2b5c3d0890e145d96fa2cc543136983455f0e1",
+  "actor_observation_dim": 110,
+  "action_dim": 31,
+  "shipped_deploy_wrapper_max_abs_error": 0.0,
+  "reference_clock_action_max_abs_error": 0.0,
+  "actor_depends_on_time_step": false,
+  "actor_recurrent_nodes": false,
+  "joint_map_bijective": true,
+  "default_pose_source": "original deploy.yaml",
+  "gains_source": "original ONNX metadata: kp and total training damping; shared MJCF armature/friction",
+  "source": {
+    "repository": "dongc1/nohope",
+    "commit": "7990f18c2c1ae560c9e0708dca10228b9f2cc610",
+    "policy_path": "hope_training/whole_body_tracking/checkpoints/policy.onnx",
+    "deploy_sha256": "261d5e05f48f30a0c3abacc86ccaf7834943fd5755f027805d4953ea32adc1f3",
+    "native_initial_root": "agibot_a3.py init_state position (0,0,1.0684), identity rotation",
+    "shared_plant": "identical MJCF Git blob ef0259258a5060a55f934910665025f2c8ad2015",
+    "comparison_limit": "Native model14600 default pose/offset retained; other policy checkpoints have their own native pose/offset. Common arena, serve trajectories, command replay and outage contract."
+  },
+  "kp_deploy_name_mapping": "PASS",
+  "damping_total_equals_deploy_plus_passive": "PASS",
+  "deploy_lf_sha256": "c6f60914d30c688ec1f262bdb048eba234aa032ed2c094998ce8d4dcf46a3632",
+  "identical_to_public_HOPE_checkpoint": true
+}

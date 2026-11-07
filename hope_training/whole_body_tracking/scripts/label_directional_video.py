@@ -21,7 +21,8 @@ def main():
             sid=r['shot_id'] if r else 0;cat=labels[sid]['category'] if r else 'initial_stand'
             dropout=any(start<=t<end for start,end in summary['pelvis_dropout_windows_s'])
             fallen=summary['fall_time_s'] is not None and t>=summary['fall_time_s']
-            top=f'MODEL {summary["iteration"]} | 120 DIRECTIONAL SERVES | RECORDED TARGETS\\NShot {sid}/120 - {cat} | t={t:.2f}s | pelvis '+('DROPOUT - LAST POSE HELD' if dropout else 'UPDATING')
+            architecture='NON-GRU' if summary.get('architecture')=='feedforward' else 'GRU'
+            top=f'MODEL {summary["iteration"]} - {architecture} | 120 DIRECTIONAL SERVES | RECORDED TARGETS\\NShot {sid}/120 - {cat} | t={t:.2f}s | pelvis '+('DROPOUT - LAST POSE HELD' if dropout else 'UPDATING')
             bottom=f'Racket contacts {sum(v<=t for v in hit_times.values())} | '+('FALL - RALLY STOPPED' if fallen else 'No fall so far')+' | orange incoming / cyan after contact'
             for style,text in [('Top',top),('Bottom',bottom)]:f.write(f'Dialogue: 0,{clock(i/20)},{clock((i+1)/20)},{style},,0,0,0,,{text}\n')
     video=a.output/'directional-120.mp4'

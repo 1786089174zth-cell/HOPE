@@ -8,7 +8,7 @@ from concurrent_physical_balls import ConcurrentBalls
 from recurrent_physical_ball import VideoRecorder
 
 
-def render(output,bundle,wide_view=False):
+def render(output,bundle,wide_view=False,fast_render=False):
     out=Path(output);manifest=json.loads((Path(bundle)/'manifest.json').read_text())
     config=json.loads((out/'configuration.json').read_text())
     if config['policy_manifest']['onnx_sha256']!=manifest['onnx_sha256']:raise ValueError('Video bundle does not match evaluation')
@@ -17,6 +17,9 @@ def render(output,bundle,wide_view=False):
     video=out/'diagnostic.mp4'
     if video.exists():raise FileExistsError('Refusing existing video')
     recorder=VideoRecorder(plant,video,fps=20,concurrent=True)
+    if fast_render:
+        recorder.renderer.scene.flags[plant.mj.mjtRndFlag.mjRND_REFLECTION]=False
+        recorder.renderer.scene.flags[plant.mj.mjtRndFlag.mjRND_SHADOW]=False
     if wide_view:
         recorder.camera.distance=7.2;recorder.camera.azimuth=105;recorder.camera.elevation=-43
     trajectories=(out/'ball-trajectories.jsonl').open();states=(out/'render-states.jsonl').open()
@@ -34,17 +37,20 @@ def render(output,bundle,wide_view=False):
                 next_sample=next(trajectories,None)
             pool.records=records
             plant.data.qpos[:]=frame['qpos'];plant.mj.mj_forward(plant.model,plant.data)
-            target=None if frame['target_position'] is None else ObsTarget(np.array(frame['target_position']),np.array(frame['target_velocity']),0.)
+            # Keep the wide comparison view unobstructed by the generic target's
+            # large LIVE PLANNER TARGET billboard (commands here are recorded).
+            target=None if wide_view or frame['target_position'] is None else ObsTarget(np.array(frame['target_position']),np.array(frame['target_velocity']),0.)
             # The saved states are nominally 20fps, with <20ms sample quantization.
             recorder.capture(target,0,count/20.);count+=1
     finally:
         recorder.close();trajectories.close();states.close()
     dump(out/'video-receipt.json',{'frames':count,'fps':20,'video':str(video),
         'semantics':'Recorded actual qpos and measured trajectory playback; no actor inference, planner solve, new collision or score computed during rendering.',
-        'onnx_sha256':manifest['onnx_sha256'],'wide_view':wide_view})
+        'onnx_sha256':manifest['onnx_sha256'],'wide_view':wide_view,'shadows_and_reflections':not fast_render})
     print('Recorded-state video:',video,flush=True)
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',required=True);p.add_argument('--bundle',required=True)
     p.add_argument('--wide-view',action='store_true')
-    a=p.parse_args();render(a.output,a.bundle,a.wide_view)
+    p.add_argument('--fast-render',action='store_true',help='Disable decorative shadows and floor reflections; actual states, camera, FPS and timing unchanged')
+    a=p.parse_args();render(a.output,a.bundle,a.wide_view,a.fast_render)
