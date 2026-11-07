@@ -78,6 +78,7 @@ def main():
     ap.add_argument('--pelvis-dropout-windows',default='',help='start:duration in seconds, comma separated')
     ap.add_argument('--neutral-final-tail',action='store_true',help='Diagnostic neutral target after final ball release')
     ap.add_argument('--neutral-expired-targets',action='store_true',help='Diagnostic neutral target after any expired strike deadline')
+    ap.add_argument('--sensor-stride',type=int,choices=(5,10,12,20),default=5,help='Physics steps between ROS sensor publishes')
     ap.add_argument('--max-clock-lag-s',type=float,default=.05)
     a=ap.parse_args();out=a.output;out.mkdir(parents=True,exist_ok=False)
     dropout_windows=parse_dropout_windows(a.pelvis_dropout_windows)
@@ -110,6 +111,7 @@ def main():
         'episode_timeouts_disabled':True,'reset_rule':'initial only; fall ends rally',
         'recovery':{'xy_m':.05,'speed_ema_mps':.12,'speed_ema_alpha':.2,'tilt_deg':12,'yaw_deg':5,'pelvis_min_m':.8,'continuous_dwell_s':.3},
         'host_completion_clock_proxy_after_strike_s':.5,'minimum_command_lead_s':.04,'maximum_wall_clock_lag_s':a.max_clock_lag_s,
+        'sensor_publish_hz':1000//a.sensor_stride,
         'certification':'NOT_APPLICABLE_REFERENCE_SEQUENCE_DIAGNOSTIC','command':sys.argv})
     conn=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);conn.settimeout(.25);conn.connect(a.socket)
     channel=conn.makefile('rwb');obslog=(out/'policy-trace.jsonl').open('x');cmdlog=(out/'planner-commands.jsonl').open('x')
@@ -150,7 +152,7 @@ def main():
     def after(t):
         nonlocal subcount,last_target,last_deadline,accepted_current,peak_lag
         subcount+=1
-        if subcount%5:return
+        if subcount%a.sensor_stride:return
         lag=time.monotonic()-(begin+t);peak_lag=max(peak_lag,lag)
         if lag>a.max_clock_lag_s:raise RuntimeError(f'Realtime diagnostic clock lag {lag:.3f}s exceeds {a.max_clock_lag_s:.3f}s; wall-deadline validity not established')
         time.sleep(max(0,begin+t-time.monotonic()))
@@ -327,6 +329,7 @@ def main():
             'pelvis_dropout_windows_s':dropout_windows,'pelvis_dropout_actor_ticks':dropout_ticks,
             'neutral_final_tail':a.neutral_final_tail,'neutral_final_tail_ticks':neutral_tail_ticks,'first_neutral_final_tail_s':first_neutral_tail_s,
             'neutral_expired_targets':a.neutral_expired_targets,'neutral_expired_target_ticks':neutral_expired_ticks,'first_neutral_expired_target_s':first_neutral_expired_s,
+            'sensor_publish_hz':1000//a.sensor_stride,
             'groups':groups,'rally_failure':failure,'fall_time_s':fall_time,'rally_stop_time_s':rally_stop_time,'error':error,
             'mujoco_warning_counts':plant.data.warning.number.tolist(),'post_failure_drain':'last controls held unchanged; no actor/planner action updates; bounded safe physical drain',
             'resets_after_initial':policy.reset_count-1,'peak_concurrent_balls':pool.peak_concurrent,

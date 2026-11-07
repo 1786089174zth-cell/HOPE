@@ -1,0 +1,10 @@
+{
+  "schema": "hope_model19000_wide_dropout_replay_provenance_v1",
+  "evaluation_run": "model19000-wide-replay-3pHEQX",
+  "planner_mode": "recorded_schema2_command_replay_no_live_ros",
+  "original_planner_run": "model19000-k98evzig",
+  "replay_artifact_sha256": "17ba0ad1398eebc7af5e89ad30e5c00384ae8ccad6452c2b9b7e8aae4a40ca34",
+  "raw_summary_sha256": "7a8a91b36b4983677ad86e36fa2d2dc07992b7ac59fd1e8aee7ab3d08e27b79a",
+  "live_combination_comparison": "First 17 applied target positions and velocities exactly matched the aborted live wide+dropout trial model19000-1is2r_3x.",
+  "limits": "Does not test planner response to pelvis dropout or ROS timing; tests actor and physical stability with recorded wide-scene commands."
+}

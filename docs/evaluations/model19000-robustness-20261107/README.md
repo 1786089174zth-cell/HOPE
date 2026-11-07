@@ -48,3 +48,13 @@ python hope_training/whole_body_tracking/scripts/run_model19000_mujoco.py \
 复现：在上面的命令中不设 `--scene`，分别添加 `--neutral-final-tail`，或添加 `--neutral-expired-targets --pelvis-dropout-windows 21:0.04,43:0.2,61:1.0,90:0.2,120:1.0`。小型证据：[末尾切换汇总](neutral-final-tail-summary.json)、[逐球](neutral-final-tail-per-ball.csv)；[通用过期切换与丢帧汇总](neutral-expired-dropout-summary.json)、[逐球](neutral-expired-dropout-per-ball.csv)。完整逐 tick trace 和 ROS 日志在 WSL `/home/rog/hope-evaluations/model19000-fix/`。
 
 这仍是 MuJoCo 诊断开关，尚未接入实机。现场应分别处理规划目标过期与 pelvis 动捕过期：以单调时钟监测时间戳、拒绝无效/跳变位姿，短时保持最后有效位姿并限制目标变化，超出许可窗口后停止发球并平滑转入已验证的站立控制器；恢复时验证连续新帧再平滑接回。现有 C++ runner 有 mocap 失效转 PD_STAND 的路径，但发布的 GRU bundle 与现有实机 runner ABI 不兼容，不能用这里的仿真结果宣称硬件已安全。严格合格击球和合法落台仍为 `0`。
+
+## 更宽来球叠加五段 pelvis 丢帧
+
+同一 `model19000-wide-100.yaml` 与 `21:0.04,43:0.2,61:1.0,90:0.2,120:1.0` 秒的 pelvis 丢帧同时施加，并在最后一球后启用 `--neutral-final-tail`。本机使用实时 ROS 规划器的组合运行多次因主机时钟落后在第 9–21 球中止，均未走完 100 球；50 Hz 实时传感器发布虽然走完 100 球，但规划器没有给出任何有效命令，故 **不能算作组合测试通过**。
+
+为单独评估固定宽分布和丢帧对 GRU/物理机器人稳定性的叠加影响，用原宽分布 100 球运行 `model19000-k98evzig` 的 100 条已接受规划命令按原仿真时刻重放；前 17 条命令与中止前实时组合运行的目标位置和速度逐条相同。重放桥接每 20 ms 送入已记录命令，actor 仍以 50 Hz 控制、物理仍以 1 ms 步长积分，连续 GRU 隐藏状态不重置。结果：**100/100 发出、100/100 重放目标接受、87 次原始球拍接触、13 次漏接、0 跌倒、0 重置**；五段注入覆盖 122 个 actor tick，最终恢复尾段 151 个中性目标 tick，仿真到 `153.48 s`，最大主机滞后 `0.104 s`。13 个漏接球号与原宽分布测试完全相同。
+
+证据：[重放规划命令](wide-planner-command-replay.json)、[汇总](wide-dropout-replay-summary.json)、[逐球](wide-dropout-replay-per-ball.csv)、[桥接记录](wide-dropout-replay-bridge.txt)、[来源说明和哈希](wide-dropout-replay-provenance.json)；完整逐 tick trace、球轨迹和录制状态在 WSL `/home/rog/hope-evaluations/model19000-wide-replay-3pHEQX/scored/`。重放脚本为 `hope_training/whole_body_tracking/scripts/planner_command_replay_bridge.py`，诊断器使用原宽分布场景、`--neutral-final-tail --pelvis-dropout-windows 21:0.04,43:0.2,61:1.0,90:0.2,120:1.0 --sensor-stride 20 --video`。
+
+**限制：**命令来自无丢帧的原宽分布运行，重放不验证实时规划器在 pelvis 断流后的新决策或 ROS 端到端时限。50 Hz 是命令重放传输率，不是原实时规划器的 200 Hz 传感器率；该结果是策略/物理稳定性诊断，不能替代完整的实时联测或实机安全验收。原始球拍接触也不等于合法回球。
