@@ -4420,11 +4420,6 @@ class PpPolicy {
       return;
     }
     const auto snap = racket_in_->Latest();
-    if (cfg_.shared_session_home && !SharedHomeCommandMatches_(snap.cmd)) {
-      ClearPendingStation_(tick_idx, "session_home_mismatch");
-      set_planner_status_("session_home_mismatch");
-      return;
-    }
     planner_current_msg_seq_ = snap.seq;
     planner_current_producer_epoch_ = snap.producer_epoch;
     planner_current_flight_id_ = snap.cmd.flight_id;
@@ -4437,6 +4432,35 @@ class PpPolicy {
       BlockOrExpirePendingStation_(tick_idx, 0.0, "no_command");
       set_planner_status_("no_command");
       return;
+    }
+    if (cfg_.shared_session_home) {
+      const bool matches = SharedHomeCommandMatches_(snap.cmd);
+      if (snap.seq != shared_home_diagnostic_seq_) {
+        shared_home_diagnostic_seq_ = snap.seq;
+        PpBaseSample base;
+        const bool base_ok = base_in_ && base_in_->Latest(base, cfg_.external_base_max_age_s, true);
+        const double expected_x = shared_home_receipt_.plane_x +
+            (snap.cmd.schema == 5 ? snap.cmd.plane_reference_x : shared_home_receipt_.x);
+        std::fprintf(stderr, "[pp shared-home] match=%d seq=%llu wire_command=%llu receiver_epoch=%llu revision=%llu flight=%llu schema=%d epoch=%llu expected_epoch=%llu frame=%d target_x=%.9f expected_x=%.9f home_x=%.9f home_y=%.9f plane=%.9f base_fresh=%d calibration=%llu expected_calibration=%llu world=%llu expected_world=%llu\n",
+            matches ? 1 : 0, static_cast<unsigned long long>(snap.seq),
+            static_cast<unsigned long long>(snap.cmd.command_seq),
+            static_cast<unsigned long long>(snap.cmd.producer_epoch),
+            static_cast<unsigned long long>(snap.cmd.revision_id),
+            static_cast<unsigned long long>(snap.cmd.flight_id), snap.cmd.schema,
+            static_cast<unsigned long long>(snap.cmd.home_epoch),
+            static_cast<unsigned long long>(shared_home_receipt_.epoch), snap.cmd.frame_code,
+            snap.cmd.pos_w.x(), expected_x,
+            shared_home_receipt_.x, shared_home_receipt_.y, shared_home_receipt_.plane_x,
+            base_ok ? 1 : 0, static_cast<unsigned long long>(base.calibration_id),
+            static_cast<unsigned long long>(shared_home_receipt_.calibration_id),
+            static_cast<unsigned long long>(base.world_frame_id),
+            static_cast<unsigned long long>(shared_home_receipt_.world_id));
+      }
+      if (!matches) {
+        ClearPendingStation_(tick_idx, "session_home_mismatch");
+        set_planner_status_("session_home_mismatch");
+        return;
+      }
     }
     const bool revisioned_planner_contract =
         onnx_.is_v17_r10_p0_gate3() ||
@@ -5984,6 +6008,7 @@ class PpPolicy {
         base.world_frame_id == shared_home_receipt_.world_id;
   }
   a3_deploy::SessionHomeReceipt shared_home_receipt_;
+  std::uint64_t shared_home_diagnostic_seq_ = 0;
   std::uint64_t shared_home_epoch_counter_ = 0, shared_home_sequence_ = 0;
   a3_deploy::PlanePostureGate plane_posture_gate_;
   std::function<void(const std::vector<double>&)> session_home_publish_;
