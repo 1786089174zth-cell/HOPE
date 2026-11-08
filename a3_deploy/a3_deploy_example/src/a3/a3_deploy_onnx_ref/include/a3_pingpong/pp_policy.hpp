@@ -1280,6 +1280,7 @@ class PpPolicy {
   // anchor so it re-captures at the robot's NEW spot (a stale anchor from before the
   // move would command a walk back to the old position), and restarts the arm-hold
   // sustained-quiet clock (--arm-hold-nominal) for the fresh MOTION entry.
+  void begin_recurrent_session() { onnx_.ResetRecurrentSession(); }
   void rearm_yaw_align() {
     yaw_align_pending_.store(true);
     kernel_odometry_.Reset();
@@ -1492,6 +1493,9 @@ class PpPolicy {
   void set_mode_handoff_hold(bool hold) { mode_handoff_hold_ = hold; }
   bool ComputeCommand(std::uint64_t tick_idx, const robot_io::RobotState& state,
                       robot_io::RobotCommand& cmd) {
+    onnx_.BeginPolicyTick(tick_idx);
+    if (onnx_.is_recurrent() && !cfg_.policy_native)
+      throw std::runtime_error("GRU requires policy-native control through HOLD/recovery");
     // Kernel is an explicit no-mocap actor test. Keep the normal observation,
     // inference, action-feedback and Runner handoff paths below. Only world
     // localization/Planner release differ; never advertise synthetic mocap.
