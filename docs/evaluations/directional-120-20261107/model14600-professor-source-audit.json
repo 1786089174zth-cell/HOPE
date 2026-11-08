@@ -1,0 +1,36 @@
+{
+  "as_of_client_date": "2026-11-07 America/Los_Angeles",
+  "authoritative_repositories": {
+    "hitchopen/HOPE": {
+      "branch": "main",
+      "remote_head": "7990f18c2c1ae560c9e0708dca10228b9f2cc610"
+    },
+    "dongc1/nohope": {
+      "branch": "main",
+      "remote_head": "7990f18c2c1ae560c9e0708dca10228b9f2cc610"
+    }
+  },
+  "source_download": "git fetch from both authoritative remote URLs; git archive of the fetched commit into a separate cache; no checkout changes to professor repositories",
+  "baseline_model": "model_14600",
+  "policy_path": "hope_training/whole_body_tracking/checkpoints/policy.onnx",
+  "onnx_sha256": "a987240610bb9a49ea42da8eafcdc84c3cfbc8d5470bf7ff1a2d7f1f624cdd28",
+  "checkpoint_sha256": "20053e683cdbefb24575299b8b2b5c3d0890e145d96fa2cc543136983455f0e1",
+  "canonical_deploy_sha256": "c6f60914d30c688ec1f262bdb048eba234aa032ed2c094998ce8d4dcf46a3632",
+  "separate_model21800_export_sha256": "6bf1a2418f8538e23577a0153f2fe6a1e78dee91f41650a232259432a84a4dc8",
+  "version_scope": "Current main/checkpoints baseline is model14600 in both professor repositories. This does not assert model14600 is the highest-iteration or newest unpublished checkpoint across every experiment branch.",
+  "additional_nohope_export_branches_checked": [
+    "main_improve",
+    "main_improve_1",
+    "main_improve_2",
+    "main_improve_3",
+    "fix/continuous-posture-station",
+    "gate3_stationary_aim"
+  ],
+  "additional_branch_export_finding": "All checked branches retain the same separate model_21800 ONNX Git blob ee014fdb6732b52ac9b2d48c9149633b7bc6465d; main and gate3_stationary_aim also have the model14600 checkpoints ONNX blob cb4a08db3b11f9451111efb86f9d172db0dcefa9.",
+  "native_idle_source": {
+    "file": "a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp",
+    "behavior": "Non-late-reveal hitter_pure hold uses world HOME + per-side trained box centers, nonzero trained velocity box centers, and positive pinned clock clamped to clip strike prefix. Optional legacy non-policy-native mode has a separate official PD stand path.",
+    "pure_policy_native_hold_implemented": true,
+    "official_PD_override_in_corrected_120": false
+  }
+}

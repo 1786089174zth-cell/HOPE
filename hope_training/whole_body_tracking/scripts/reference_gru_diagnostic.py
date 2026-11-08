@@ -79,6 +79,7 @@ def main():
     ap.add_argument('--neutral-final-tail',action='store_true',help='Diagnostic neutral target after final ball release')
     ap.add_argument('--neutral-expired-targets',action='store_true',help='Diagnostic neutral target after any expired strike deadline')
     ap.add_argument('--planner-only',action='store_true',help='Collect live planner commands with the robot held at its initial pose; no actor safety scoring')
+    ap.add_argument('--feedforward-idle-contract',choices=['native','legacy-gru-neutral'],default='native',help='Non-GRU only: metadata-driven native wait; legacy mode reproduces the invalid earlier idle adapter')
     ap.add_argument('--sensor-stride',type=int,choices=(5,10,12,20),default=5,help='Physics steps between ROS sensor publishes')
     ap.add_argument('--max-clock-lag-s',type=float,default=.05)
     a=ap.parse_args();out=a.output;out.mkdir(parents=True,exist_ok=False)
@@ -122,6 +123,8 @@ def main():
         'recovery':{'xy_m':.05,'speed_ema_mps':.12,'speed_ema_alpha':.2,'tilt_deg':12,'yaw_deg':5,'pelvis_min_m':.8,'continuous_dwell_s':.3},
         'host_completion_clock_proxy_after_strike_s':.5,'minimum_command_lead_s':.04,'maximum_wall_clock_lag_s':a.max_clock_lag_s,
         'sensor_publish_hz':1000//a.sensor_stride,'planner_only':a.planner_only,
+        'feedforward_idle_contract':a.feedforward_idle_contract if architecture=='feedforward' else None,
+        'native_idle_tuples':policy.idle_contract if architecture=='feedforward' else None,
         'certification':'NOT_APPLICABLE_REFERENCE_SEQUENCE_DIAGNOSTIC','command':sys.argv})
     conn=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);conn.settimeout(.25);conn.connect(a.socket)
     channel=conn.makefile('rwb');obslog=(out/'policy-trace.jsonl').open('x');cmdlog=(out/'planner-commands.jsonl').open('x')
@@ -133,6 +136,7 @@ def main():
     ema_speed=0.;last_valid_base_pos=None;last_valid_forward=None;dropout_ticks=0
     neutral_tail_ticks=0;first_neutral_tail_s=None
     neutral_expired_ticks=0;first_neutral_expired_s=None
+    native_hold_ticks=0;native_tts_clamp_ticks=0;last_planner_side='forehand'
 
     def before(t):
         nonlocal next_launch,next_index,current_id,release_at,tail_end,all_released,accepted_current,spawn_ns
@@ -160,7 +164,7 @@ def main():
             print(f'LAUNCH shot={current_id} t={t:.3f} active={pool.live} policy={architecture}',flush=True)
 
     def after(t):
-        nonlocal subcount,last_target,last_deadline,accepted_current,peak_lag
+        nonlocal subcount,last_target,last_deadline,accepted_current,peak_lag,last_planner_side
         subcount+=1
         if subcount%a.sensor_stride:return
         lag=time.monotonic()-(begin+t);peak_lag=max(peak_lag,lag)
@@ -184,6 +188,7 @@ def main():
             if current_id is not None:rows[current_id]['commands'].append(record)
             if apply:
                 accepted_current=True;last_target=ObsTarget(np.array(cmd['position_w']),np.array(cmd['velocity_w']),0.)
+                last_planner_side=cmd['planned_side']
                 last_deadline=cmd['deadline_unix_s']-unix_anchor
                 row=rows[current_id];row['planner_on_time']=True;row['planner_side']=cmd['planned_side']
                 row['planned_deadline_s']=last_deadline;row['host_completion_clock_proxy_s']=last_deadline+.5
@@ -199,14 +204,22 @@ def main():
             expired=last_deadline is not None and t>=last_deadline+.5
             neutral_tail=bool(a.neutral_final_tail and all_released and expired)
             neutral_expired=bool(a.neutral_expired_targets and expired)
+            native_idle=bool(architecture=='feedforward' and a.feedforward_idle_contract=='native' and (last_target is None or neutral_tail or neutral_expired))
             if last_target is None or neutral_tail or neutral_expired:
-                target=ObsTarget(plant.data.site_xpos[plant.racket].copy(),np.zeros(3),-1.)
+                target=ObsTarget(*policy.idle_tuple(plant.anchor,last_planner_side)) if native_idle else ObsTarget(plant.data.site_xpos[plant.racket].copy(),np.zeros(3),-1.)
             else:
                 target=planner_target(last_target.pos_w,last_target.vel_w,last_deadline,t)
+                if architecture=='feedforward' and a.feedforward_idle_contract=='native':
+                    max_tts=policy.idle_contract[last_planner_side]['time_to_strike']
+                    if target.time_to_strike>max_tts:
+                        target=ObsTarget(target.pos_w,target.vel_w,max_tts);native_tts_clamp_ticks+=1
             if neutral_expired:source='neutral_expired_target'
             elif neutral_tail:source='neutral_final_tail'
             elif last_target is None:source='idle_no_plan'
             else:source='actual_live_planner'
+            if native_idle:
+                source='native_pre_first_hold' if last_target is None else 'native_expired_target_hold'
+                native_hold_ticks+=1
             if neutral_tail:
                 neutral_tail_ticks+=1
                 if first_neutral_tail_s is None:first_neutral_tail_s=t
@@ -349,6 +362,8 @@ def main():
             'neutral_final_tail':a.neutral_final_tail,'neutral_final_tail_ticks':neutral_tail_ticks,'first_neutral_final_tail_s':first_neutral_tail_s,
             'neutral_expired_targets':a.neutral_expired_targets,'neutral_expired_target_ticks':neutral_expired_ticks,'first_neutral_expired_target_s':first_neutral_expired_s,
             'sensor_publish_hz':1000//a.sensor_stride,'planner_only':a.planner_only,
+            'feedforward_idle_contract':a.feedforward_idle_contract if architecture=='feedforward' else None,
+            'native_hold_ticks':native_hold_ticks,'native_tts_clamp_ticks':native_tts_clamp_ticks,
             'groups':groups,'rally_failure':failure,'fall_time_s':fall_time,'rally_stop_time_s':rally_stop_time,'error':error,
             'mujoco_warning_counts':plant.data.warning.number.tolist(),'post_failure_drain':'last controls held unchanged; no actor/planner action updates; bounded safe physical drain',
             'resets_after_initial':policy.reset_count-1,'peak_concurrent_balls':pool.peak_concurrent,

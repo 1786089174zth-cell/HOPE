@@ -26,6 +26,22 @@
     "wide_view": true
   },
   "14600": {
+    "video_filename": "model14600-directional-120-dropout-corrected-idle.mp4",
+    "sha256": "4f23329c30ba5fe2bcf7e2c710d392f4829c8fb463b6d00202e78e32fc6b39f0",
+    "bytes": 5230756,
+    "frames": 4095,
+    "fps": 20,
+    "duration_s": 204.75,
+    "container_duration": "00:03:24.75",
+    "decode_check": "ffmpeg full decode PASS",
+    "architecture": "feedforward_no_GRU",
+    "idle_contract": "corrected native world hold",
+    "initial_idle_preserved": true,
+    "wide_view": true,
+    "shadows_and_reflections": false,
+    "semantics": "Recorded actual qpos and measured trajectory playback; no actor inference, planner solve, new collision or score computed during rendering."
+  },
+  "14600-invalid-idle": {
     "video_filename": "model14600-directional-120-dropout.mp4",
     "sha256": "0215cf38a295251f6a53c90e999fa35921f606e2fa55dadc6ecec67853f898f3",
     "bytes": 5598405,
@@ -38,6 +54,18 @@
     "initial_idle_preserved": true,
     "wide_view": true,
     "shadows_and_reflections": false,
-    "semantics": "Recorded actual qpos and measured trajectory playback; no actor inference, planner solve, new collision or score computed during rendering."
+    "semantics": "Recorded actual qpos and measured trajectory playback; no actor inference, planner solve, new collision or score computed during rendering.",
+    "status": "INVALID_ADAPTER",
+    "reason": "Incorrect negative-clock GRU idle tuple applied to model14600"
+  },
+  "14600-idle-ab": {
+    "video_filename": "model14600-idle-adapter-ab.mp4",
+    "sha256": "86ac6ce08600ff90408dbf552beb63668c219d7a6e4fd986810c1811a2ac1fa7",
+    "bytes": 613154,
+    "frames": 200,
+    "fps": 10,
+    "duration_s": 20.0,
+    "decode_check": "ffmpeg full decode PASS",
+    "semantics": "Recorded idle qpos A/B, same actor and physical config, no PD override in either panel"
   }
 }

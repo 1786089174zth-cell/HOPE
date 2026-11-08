@@ -1,77 +1,129 @@
 {
+  "status": "CORRECTED_NATIVE_IDLE",
+  "replaces_invalid_run": "model14600-w8e_8kj5",
+  "invalid_reason": "GRU neutral target (current racket, zero velocity, tts=-1) was incorrectly applied to model14600 native idle; invalidates the earlier model behavior comparison.",
   "architecture": "feedforward_no_GRU",
-  "run_directory": "/home/rog/hope-evaluations/model14600-directional/model14600-w8e_8kj5",
-  "bundle_directory": "/home/rog/hope-evaluations/model14600-native-bundle-v1",
-  "source": {
-    "repository": "dongc1/nohope",
-    "commit": "7990f18c2c1ae560c9e0708dca10228b9f2cc610",
+  "run_directory": "/home/rog/hope-evaluations/model14600-directional-corrected/model14600-lgdvol6x",
+  "authoritative_source": {
+    "as_of_client_date": "2026-11-07 America/Los_Angeles",
+    "authoritative_repositories": {
+      "hitchopen/HOPE": {
+        "branch": "main",
+        "remote_head": "7990f18c2c1ae560c9e0708dca10228b9f2cc610"
+      },
+      "dongc1/nohope": {
+        "branch": "main",
+        "remote_head": "7990f18c2c1ae560c9e0708dca10228b9f2cc610"
+      }
+    },
+    "source_download": "git fetch from both authoritative remote URLs; git archive of the fetched commit into a separate cache; no checkout changes to professor repositories",
+    "baseline_model": "model_14600",
     "policy_path": "hope_training/whole_body_tracking/checkpoints/policy.onnx",
-    "deploy_sha256": "261d5e05f48f30a0c3abacc86ccaf7834943fd5755f027805d4953ea32adc1f3",
-    "native_initial_root": "agibot_a3.py init_state position (0,0,1.0684), identity rotation",
-    "shared_plant": "identical MJCF Git blob ef0259258a5060a55f934910665025f2c8ad2015",
-    "comparison_limit": "Native model14600 default pose/offset retained; other policy checkpoints have their own native pose/offset. Common arena, serve trajectories, command replay and outage contract."
-  },
-  "scene_sha256": "e788e08d2598e5ef59298465b2d8486757f2223bb691b78218e3a9852e4d6177",
-  "replay_sha256": "34f449f7a41e68ea914b2461b99e61fc6d4ece64437be557dd793b92297db1a8",
-  "falls": 0,
-  "all": {
-    "scheduled_or_assigned": 120,
-    "launched": 120,
-    "unlaunched": 0,
-    "raw_contacts": 57,
-    "qualified_contacts": 0,
-    "legal_landings": 0,
-    "net_contacts": 0,
-    "misses": 63,
-    "valid_deliveries": 80,
-    "planner_on_time": 112,
-    "planner_failures": 8,
-    "failed_returns": 57,
-    "unresolved": 0,
-    "interrupted": 0,
-    "recovery_dwell_pass": 112,
-    "end_to_end": {
-      "numerator": 0,
-      "denominator": 120,
-      "rate": 0.0
-    },
-    "valid_delivery_conditioned": {
-      "numerator": 0,
-      "denominator": 80,
-      "rate": 0.0
-    },
-    "contact_conditioned_legal": {
-      "numerator": 0,
-      "denominator": 57,
-      "rate": 0.0
+    "onnx_sha256": "a987240610bb9a49ea42da8eafcdc84c3cfbc8d5470bf7ff1a2d7f1f624cdd28",
+    "checkpoint_sha256": "20053e683cdbefb24575299b8b2b5c3d0890e145d96fa2cc543136983455f0e1",
+    "canonical_deploy_sha256": "c6f60914d30c688ec1f262bdb048eba234aa032ed2c094998ce8d4dcf46a3632",
+    "separate_model21800_export_sha256": "6bf1a2418f8538e23577a0153f2fe6a1e78dee91f41650a232259432a84a4dc8",
+    "version_scope": "Current main/checkpoints baseline is model14600 in both professor repositories. This does not assert model14600 is the highest-iteration or newest unpublished checkpoint across every experiment branch.",
+    "additional_nohope_export_branches_checked": [
+      "main_improve",
+      "main_improve_1",
+      "main_improve_2",
+      "main_improve_3",
+      "fix/continuous-posture-station",
+      "gate3_stationary_aim"
+    ],
+    "additional_branch_export_finding": "All checked branches retain the same separate model_21800 ONNX Git blob ee014fdb6732b52ac9b2d48c9149633b7bc6465d; main and gate3_stationary_aim also have the model14600 checkpoints ONNX blob cb4a08db3b11f9451111efb86f9d172db0dcefa9.",
+    "native_idle_source": {
+      "file": "a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp",
+      "behavior": "Non-late-reveal hitter_pure hold uses world HOME + per-side trained box centers, nonzero trained velocity box centers, and positive pinned clock clamped to clip strike prefix. Optional legacy non-policy-native mode has a separate official PD stand path.",
+      "pure_policy_native_hold_implemented": true,
+      "official_PD_override_in_corrected_120": false
     }
   },
+  "onnx_sha256": "a987240610bb9a49ea42da8eafcdc84c3cfbc8d5470bf7ff1a2d7f1f624cdd28",
+  "scene_sha256": "e788e08d2598e5ef59298465b2d8486757f2223bb691b78218e3a9852e4d6177",
+  "replay_sha256": "34f449f7a41e68ea914b2461b99e61fc6d4ece64437be557dd793b92297db1a8",
+  "native_idle_contract": {
+    "forehand": {
+      "position_offset": [
+        0.58,
+        -0.44,
+        1.075
+      ],
+      "velocity": [
+        1.92,
+        0.18999999999999997,
+        1.03
+      ],
+      "time_to_strike": 0.8200000000000001
+    },
+    "backhand": {
+      "position_offset": [
+        0.58,
+        -0.09,
+        1.075
+      ],
+      "velocity": [
+        2.05,
+        -0.13,
+        0.675
+      ],
+      "time_to_strike": 0.96
+    }
+  },
+  "native_hold_ticks": 4086,
+  "active_time_to_strike_clamp_ticks": 0,
+  "PD_stand_override": false,
   "metrics": {
-    "tilt_deg": {
-      "maximum": 18.14555557721869,
-      "minimum": 0.030221139180780995,
-      "peak_at_s": 62.30000000000414
+    "initial_idle": {
+      "drift_m": {
+        "maximum": 0.015495721015699768,
+        "minimum": 0.0013652234549430778,
+        "peak_at_s": 4.8999999999999835
+      },
+      "tilt_deg": {
+        "maximum": 2.962008185886155,
+        "minimum": 0.20731757836022222,
+        "peak_at_s": 0.9400000000000005
+      },
+      "yaw_error_deg": {
+        "maximum": 1.345959728592876,
+        "minimum": 0.15824707067526153,
+        "peak_at_s": 0.14
+      },
+      "base_z": {
+        "maximum": 1.0692444553108826,
+        "minimum": 1.0317525174972575,
+        "peak_at_s": 0.0
+      }
     },
-    "drift_m": {
-      "maximum": 0.5317183975307728,
-      "minimum": 0.000505513789047921,
-      "peak_at_s": 3.700000000000003
-    },
-    "yaw_error_deg": {
-      "maximum": 31.423693485851224,
-      "minimum": 0.000741697321746505,
-      "peak_at_s": 62.520000000004174
-    },
-    "base_z": {
-      "maximum": 1.077875407268162,
-      "minimum": 0.8703593593183208,
-      "peak_at_s": 196.04000000002648
+    "whole_run": {
+      "drift_m": {
+        "maximum": 0.30325750948456875,
+        "minimum": 0.000742842880759675,
+        "peak_at_s": 120.99999999999307
+      },
+      "tilt_deg": {
+        "maximum": 13.811954121516537,
+        "minimum": 0.002037486937152673,
+        "peak_at_s": 190.38000000002359
+      },
+      "yaw_error_deg": {
+        "maximum": 19.614524560445872,
+        "minimum": 0.0019044962793204649,
+        "peak_at_s": 183.12000000001987
+      },
+      "base_z": {
+        "maximum": 1.0815066299481075,
+        "minimum": 0.9952340307072064,
+        "peak_at_s": 95.25999999999819
+      }
     }
   },
   "categories": {
     "nominal": {
       "count": 6,
-      "raw_contacts": 3
+      "raw_contacts": 6
     },
     "outside_left": {
       "count": 19,
@@ -79,7 +131,7 @@
     },
     "outside_right": {
       "count": 19,
-      "raw_contacts": 10
+      "raw_contacts": 12
     },
     "fan_left": {
       "count": 19,
@@ -87,7 +139,7 @@
     },
     "fan_center": {
       "count": 19,
-      "raw_contacts": 16
+      "raw_contacts": 15
     },
     "fan_right": {
       "count": 19,
@@ -103,7 +155,7 @@
     },
     "mixed_left": {
       "count": 3,
-      "raw_contacts": 3
+      "raw_contacts": 2
     },
     "mixed_right": {
       "count": 3,
@@ -116,6 +168,39 @@
     "mixed_center": {
       "count": 3,
       "raw_contacts": 3
+    }
+  },
+  "falls": 0,
+  "all": {
+    "scheduled_or_assigned": 120,
+    "launched": 120,
+    "unlaunched": 0,
+    "raw_contacts": 60,
+    "qualified_contacts": 0,
+    "legal_landings": 0,
+    "net_contacts": 0,
+    "misses": 60,
+    "valid_deliveries": 80,
+    "planner_on_time": 112,
+    "planner_failures": 8,
+    "failed_returns": 60,
+    "unresolved": 0,
+    "interrupted": 0,
+    "recovery_dwell_pass": 112,
+    "end_to_end": {
+      "numerator": 0,
+      "denominator": 120,
+      "rate": 0.0
+    },
+    "valid_delivery_conditioned": {
+      "numerator": 0,
+      "denominator": 80,
+      "rate": 0.0
+    },
+    "contact_conditioned_legal": {
+      "numerator": 0,
+      "denominator": 60,
+      "rate": 0.0
     }
   },
   "dropout_actor_ticks": 342,
@@ -167,9 +252,9 @@
     "expected_commands": 112
   },
   "comparison_limits": [
-    "Common 120 serves and recorded targets; not live planner outage response.",
-    "Native model14600 root/default posture and action offset retained; GRU checkpoints use their native posture/offset.",
-    "This compares trained policies and recipes; it does not isolate the causal effect of adding GRU.",
-    "Maximum drift includes the common 20-second initial idle period."
+    "Identical physical serves, recorded planner position/velocity/deadlines and pelvis outages.",
+    "Model14600 native positive-clock world-fixed wait; GRU runs retain their previously reported GRU-neutral handling.",
+    "Own native default posture and action offset retained; training recipes differ. Not a GRU-only ablation.",
+    "Recorded target replay does not test live planner response to outage or real robot safety."
   ]
 }

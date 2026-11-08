@@ -29,7 +29,7 @@ def main():
             while not sock.exists():
                 if bridge.poll() is not None or time.monotonic()>until:raise RuntimeError('Replay bridge startup failed')
                 time.sleep(.05)
-            cmd=[sys.executable,str(scripts/'reference_gru_diagnostic.py'),'--bundle',str(a.bundle),'--scene',str(scene),'--socket',str(sock),'--output',str(out/'scored'),'--table-impact-model','ppq004','--neutral-expired-targets','--neutral-final-tail','--pelvis-dropout-windows',WINDOWS,'--sensor-stride','20','--max-clock-lag-s','0.25','--video']
+            cmd=[sys.executable,str(scripts/'reference_gru_diagnostic.py'),'--bundle',str(a.bundle),'--scene',str(scene),'--socket',str(sock),'--output',str(out/'scored'),'--table-impact-model','ppq004','--neutral-expired-targets','--neutral-final-tail','--feedforward-idle-contract','native','--pelvis-dropout-windows',WINDOWS,'--sensor-stride','20','--max-clock-lag-s','0.25','--video']
             if a.preflight:cmd.append('--preflight')
             print('OUTPUT '+str(out),flush=True)
             with (out/'actor.log').open('w') as actorlog:rc=subprocess.run(cmd,stdout=actorlog,stderr=subprocess.STDOUT).returncode

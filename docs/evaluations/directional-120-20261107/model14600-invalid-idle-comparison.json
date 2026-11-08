@@ -1,0 +1,175 @@
+{
+  "architecture": "feedforward_no_GRU",
+  "run_directory": "/home/rog/hope-evaluations/model14600-directional/model14600-w8e_8kj5",
+  "bundle_directory": "/home/rog/hope-evaluations/model14600-native-bundle-v1",
+  "source": {
+    "repository": "dongc1/nohope",
+    "commit": "7990f18c2c1ae560c9e0708dca10228b9f2cc610",
+    "policy_path": "hope_training/whole_body_tracking/checkpoints/policy.onnx",
+    "deploy_sha256": "261d5e05f48f30a0c3abacc86ccaf7834943fd5755f027805d4953ea32adc1f3",
+    "native_initial_root": "agibot_a3.py init_state position (0,0,1.0684), identity rotation",
+    "shared_plant": "identical MJCF Git blob ef0259258a5060a55f934910665025f2c8ad2015",
+    "comparison_limit": "Native model14600 default pose/offset retained; other policy checkpoints have their own native pose/offset. Common arena, serve trajectories, command replay and outage contract."
+  },
+  "scene_sha256": "e788e08d2598e5ef59298465b2d8486757f2223bb691b78218e3a9852e4d6177",
+  "replay_sha256": "34f449f7a41e68ea914b2461b99e61fc6d4ece64437be557dd793b92297db1a8",
+  "falls": 0,
+  "all": {
+    "scheduled_or_assigned": 120,
+    "launched": 120,
+    "unlaunched": 0,
+    "raw_contacts": 57,
+    "qualified_contacts": 0,
+    "legal_landings": 0,
+    "net_contacts": 0,
+    "misses": 63,
+    "valid_deliveries": 80,
+    "planner_on_time": 112,
+    "planner_failures": 8,
+    "failed_returns": 57,
+    "unresolved": 0,
+    "interrupted": 0,
+    "recovery_dwell_pass": 112,
+    "end_to_end": {
+      "numerator": 0,
+      "denominator": 120,
+      "rate": 0.0
+    },
+    "valid_delivery_conditioned": {
+      "numerator": 0,
+      "denominator": 80,
+      "rate": 0.0
+    },
+    "contact_conditioned_legal": {
+      "numerator": 0,
+      "denominator": 57,
+      "rate": 0.0
+    }
+  },
+  "metrics": {
+    "tilt_deg": {
+      "maximum": 18.14555557721869,
+      "minimum": 0.030221139180780995,
+      "peak_at_s": 62.30000000000414
+    },
+    "drift_m": {
+      "maximum": 0.5317183975307728,
+      "minimum": 0.000505513789047921,
+      "peak_at_s": 3.700000000000003
+    },
+    "yaw_error_deg": {
+      "maximum": 31.423693485851224,
+      "minimum": 0.000741697321746505,
+      "peak_at_s": 62.520000000004174
+    },
+    "base_z": {
+      "maximum": 1.077875407268162,
+      "minimum": 0.8703593593183208,
+      "peak_at_s": 196.04000000002648
+    }
+  },
+  "categories": {
+    "nominal": {
+      "count": 6,
+      "raw_contacts": 3
+    },
+    "outside_left": {
+      "count": 19,
+      "raw_contacts": 8
+    },
+    "outside_right": {
+      "count": 19,
+      "raw_contacts": 10
+    },
+    "fan_left": {
+      "count": 19,
+      "raw_contacts": 5
+    },
+    "fan_center": {
+      "count": 19,
+      "raw_contacts": 16
+    },
+    "fan_right": {
+      "count": 19,
+      "raw_contacts": 0
+    },
+    "mixed_low": {
+      "count": 4,
+      "raw_contacts": 4
+    },
+    "mixed_high": {
+      "count": 3,
+      "raw_contacts": 3
+    },
+    "mixed_left": {
+      "count": 3,
+      "raw_contacts": 3
+    },
+    "mixed_right": {
+      "count": 3,
+      "raw_contacts": 0
+    },
+    "mixed_oblique": {
+      "count": 3,
+      "raw_contacts": 2
+    },
+    "mixed_center": {
+      "count": 3,
+      "raw_contacts": 3
+    }
+  },
+  "dropout_actor_ticks": 342,
+  "dropout_windows_s": [
+    [
+      21.0,
+      21.04
+    ],
+    [
+      31.0,
+      31.1
+    ],
+    [
+      43.0,
+      43.2
+    ],
+    [
+      52.0,
+      52.3
+    ],
+    [
+      61.0,
+      62.0
+    ],
+    [
+      78.0,
+      78.5
+    ],
+    [
+      90.0,
+      90.2
+    ],
+    [
+      120.0,
+      121.0
+    ],
+    [
+      150.0,
+      151.5
+    ],
+    [
+      180.0,
+      182.0
+    ]
+  ],
+  "all_hidden_norms_null": true,
+  "bridge": {
+    "replayed_commands": 112,
+    "expected_commands": 112
+  },
+  "comparison_limits": [
+    "Common 120 serves and recorded targets; not live planner outage response.",
+    "Native model14600 root/default posture and action offset retained; GRU checkpoints use their native posture/offset.",
+    "This compares trained policies and recipes; it does not isolate the causal effect of adding GRU.",
+    "Maximum drift includes the common 20-second initial idle period."
+  ]
+}

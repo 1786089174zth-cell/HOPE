@@ -1,0 +1,56 @@
+{
+  "legacy_negative_current_racket": {
+    "seconds": 19.999999999999662,
+    "fall": false,
+    "max_tilt_deg": 16.630807773437613,
+    "max_drift_m": 0.5317183975307728,
+    "final_drift_m": 0.4254218502957347,
+    "final_tilt_deg": 15.490618504910802,
+    "min_base_z": 0.8703593593183208,
+    "late_qdes_step_max_rad": 1.3624321520328522
+  },
+  "positive_clock_current_racket": {
+    "seconds": 19.999999999999662,
+    "fall": false,
+    "max_tilt_deg": 2.25929901889418,
+    "max_drift_m": 0.03348506876246886,
+    "final_drift_m": 0.029793146683373982,
+    "final_tilt_deg": 2.0743095550956183,
+    "min_base_z": 1.0232189119535917,
+    "late_qdes_step_max_rad": 0.009347647846344176
+  },
+  "native_world_hold": {
+    "seconds": 19.999999999999662,
+    "fall": false,
+    "max_tilt_deg": 2.962008185886155,
+    "max_drift_m": 0.015495721015699768,
+    "final_drift_m": 0.014421356729491012,
+    "final_tilt_deg": 2.481204544006732,
+    "min_base_z": 1.031752675466307,
+    "late_qdes_step_max_rad": 0.004888868405242219
+  },
+  "official_pd_stand": {
+    "seconds": 19.999999999999662,
+    "fall": false,
+    "max_tilt_deg": 0.28742567633929506,
+    "max_drift_m": 0.0010570884610735206,
+    "final_drift_m": 0.0004681111888499984,
+    "final_tilt_deg": 0.14089480183540196,
+    "min_base_z": 1.0703620964426055,
+    "late_qdes_step_max_rad": 0.0
+  },
+  "native_hold_tuple": {
+    "position_w": [
+      0.58,
+      -0.44,
+      1.075
+    ],
+    "velocity_w": [
+      1.92,
+      0.18999999999999997,
+      1.03
+    ],
+    "time_to_strike": 0.8200000000000001,
+    "source": "professor pp_policy.hpp box-center initialization and max_tts clamp"
+  }
+}

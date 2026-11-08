@@ -22,7 +22,10 @@ def main():
             dropout=any(start<=t<end for start,end in summary['pelvis_dropout_windows_s'])
             fallen=summary['fall_time_s'] is not None and t>=summary['fall_time_s']
             architecture='NON-GRU' if summary.get('architecture')=='feedforward' else 'GRU'
-            top=f'MODEL {summary["iteration"]} - {architecture} | 120 DIRECTIONAL SERVES | RECORDED TARGETS\\NShot {sid}/120 - {cat} | t={t:.2f}s | pelvis '+('DROPOUT - LAST POSE HELD' if dropout else 'UPDATING')
+            heading=f'MODEL {summary["iteration"]} - {architecture} | 120 DIRECTIONAL SERVES'
+            if summary.get('architecture')=='feedforward' and summary.get('feedforward_idle_contract')=='native':
+                heading=f'MODEL {summary["iteration"]} NON-GRU | CORRECTED NATIVE IDLE | 120 BALLS'
+            top=heading+' | RECORDED TARGETS'+f'\\NShot {sid}/120 - {cat} | t={t:.2f}s | pelvis '+('DROPOUT - LAST POSE HELD' if dropout else 'UPDATING')
             bottom=f'Racket contacts {sum(v<=t for v in hit_times.values())} | '+('FALL - RALLY STOPPED' if fallen else 'No fall so far')+' | orange incoming / cyan after contact'
             for style,text in [('Top',top),('Bottom',bottom)]:f.write(f'Dialogue: 0,{clock(i/20)},{clock((i+1)/20)},{style},,0,0,0,,{text}\n')
     video=a.output/'directional-120.mp4'
