@@ -244,7 +244,8 @@ def package_one(session, spec, bundle, code_commit):
         return destination
     candidate = Path(tempfile.mkdtemp(prefix=f'package-{n}-', dir=session))
     exported = candidate / 'policy/exported';exported.mkdir(parents=True)
-    params = candidate / 'policy/params';shutil.copytree(TEMPLATE / 'policy/params', params)
+    # A companion deploy.yaml binds model19000 specifically; never clone it into another actor.
+    params = candidate / 'policy/params';shutil.copytree(TEMPLATE / 'policy/params', params, ignore=shutil.ignore_patterns('deploy.yaml'))
     for name in ['runtime', 'requirements-runtime.txt', 'requirements-mujoco.txt']:
         source = TEMPLATE / 'policy/exported' / name
         if source.is_dir():shutil.copytree(source, exported / name, ignore=shutil.ignore_patterns('__pycache__'))
