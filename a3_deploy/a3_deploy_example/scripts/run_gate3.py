@@ -142,7 +142,7 @@ def parser():
     p.add_argument("--runtime", help="one-time environment config override")
     p.add_argument("--check", action="store_true", help="load the actual Runner policy, print resolved run; do not start simulation")
     p.add_argument("--integration-preflight", action="store_true",
-                   help="unscored six-clean-serve prefix; never a certification run")
+                   help="unscored standard 26-ball reference sequence; never a certification run")
     p.add_argument("--dry-run", action="store_true", help="alias for --check")
     p.add_argument("--configure", action="store_true", help="save installed environment paths once")
     p.add_argument("--runner-dist")
@@ -306,12 +306,11 @@ def execute(args):
     if args.integration_preflight:
         if args.balls is not None:
             raise ValueError('--integration-preflight cannot override --balls')
-        # Preserve the six clean shots and all their timing/idle/tail settings.
-        # Formal scene/count/thresholds are untouched; this prefix is unscored.
-        scene_env.update(PP_SERVES='6', PP_MIN_ENGAGED_SERVES='6', PP_MIN_COMPLETED_SERVES='6',
-                         PP_MIN_RAPID_ENGAGED='0', PP_MIN_RAPID_COMPLETED='0')
-        for name, stride in [('PP_SERVES_LIST', 6), ('PP_FLIGHT_S_LIST', 1), ('PP_PAUSE_S_LIST', 1)]:
-            scene_env[name] = json.dumps(json.loads(scene_env[name])[:6*stride])
+        standard = (CONFIG / 'scenarios/fixed-home.yaml').resolve()
+        if scene_path != standard or scene['balls'] != 26:
+            raise ValueError('--integration-preflight requires the standard fixed-home.yaml 26-ball sequence')
+        # Use the supported scene verbatim, including six clean shots, rapid
+        # cycle, initial idle and final tail. Do not override count or limits.
     out = resolve_path(args.output, Path.cwd()) if args.output else GEAR / "gate3/runs" / dt.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     out.mkdir(parents=True, exist_ok=False)
     policy = out / "policy"

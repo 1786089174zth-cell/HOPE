@@ -15,7 +15,7 @@ sys.path.insert(0,str(SCRIPTS))
 from pp_gate3_plant_contracts import add_cli, evaluate
 from pp_wire_identity_probe import probe
 from pp_fixed_home_profile import planner_profile
-from run_model19000_gate3_repair import preflight_gate
+from run_model19000_gate3_repair import preflight_gate, reusable_stage, ORCHESTRATION_CHANGES
 import run_gate3
 
 
@@ -96,20 +96,22 @@ def test_saved_native_inspection_has_model19000_plane():
 
 def preflight_fixture(folder):
     def write(name,data):(folder/name).write_text(json.dumps(data))
-    write('run.json',{'evaluation_kind':'integration_preflight_not_certification'})
+    from run_model19000_gate3_repair import PREFLIGHT_SCENE,sha
+    (folder/'scene.yaml').write_bytes(PREFLIGHT_SCENE.read_bytes())
+    write('run.json',{'scene_sha256':sha(PREFLIGHT_SCENE),'evaluation_kind':'integration_preflight_not_certification', 'scene':{'balls':26},'resolved_scene_environment':{'PP_SERVES':'26'}})
     write('planner.pid.monitor-complete.json',{'pid':12345,'alive':True})
-    write('pp_rally_report.json',{'rows':[{'t':20}]*6,
+    write('pp_rally_report.json',{'rows':[{'t':20}]*26,
           'runner_trace_engagement':{'engaged_flight_ids':[1],'completed_flight_ids':[1]}})
-    write('pp_planner_cpp_report.json',{'valid_commands':6,'rows_observed':6})
+    write('pp_planner_cpp_report.json',{'valid_commands':26,'rows_observed':26})
     write('pp_mujoco_plant_report.json',{
         **{name:{'evidence_complete':True,'failures':[]} for name in ('home_support_frame','torso_hold','collision_ledger')},
         'idle_smoothness':{'steady':{'measured':True},'failures':['measured behavioral failure retained']}})
-    write('pp_physical_ball_report.json',{'rows':[{'telemetry_complete':True,'trajectory_complete':True}]*6})
-    write('pp_gate3_drain_report.json',{'launched_shot_ids':list(range(1,7)),
+    write('pp_physical_ball_report.json',{'rows':[{'shot_id':i,'telemetry_complete':True,'trajectory_complete':True} for i in range(1,27)]})
+    write('pp_gate3_drain_report.json',{'launched_shot_ids':list(range(1,27)),
           'status':'complete','evidence_complete':True,'pending_shot_ids':[]})
     (folder/'console.log').write_text('Reports produced; missed shot is a behavioral failure.')
     (folder/'pp_runner.log').write_text('[pp shared-home] match=1 wire_command=1 receiver_epoch=1 revision=1 flight=1 schema=4 epoch=123 expected_epoch=123 frame=0 target_x=0.070 expected_x=0.070 plane=0.57 base_fresh=1 calibration=55 expected_calibration=55 world=66 expected_world=66\n')
-    save(folder/'pp_planner_debug.csv',[{'flight_id':'1','wire_valid':'1','command_seq':'1','revision_id':'1','session_home_epoch':'123','strike_x':'.07'}])
+    save(folder/'pp_planner_debug.csv',[{'flight_id':str(i),'wire_valid':'1','command_seq':str(i),'revision_id':'1','session_home_epoch':'123','strike_x':'.07'} for i in range(1,27)])
 
 
 def test_preflight_accepts_complete_infrastructure_without_faking_behavior_pass(tmp_path):
@@ -128,7 +130,7 @@ def test_preflight_prevents_formal_when_proof_missing(tmp_path,failure):
     if failure=='missing_plant_evidence':
         p=tmp_path/'pp_mujoco_plant_report.json';r=json.loads(p.read_text());r['home_support_frame']['evidence_complete']=False;p.write_text(json.dumps(r))
     if failure=='dead_planner':(tmp_path/'infrastructure_failure.json').write_text('{}')
-    assert not preflight_gate(tmp_path)['infrastructure_pass']
+    assert not preflight_gate(tmp_path)['readiness_pass']
 
 
 @pytest.mark.parametrize('normal_cleanup',[False,True])
@@ -149,7 +151,7 @@ def test_planner_watchdog_distinguishes_crash_from_post_drain_cleanup(tmp_path,m
 
 
 @pytest.mark.parametrize('prefix',[False,True])
-def test_checked_scene_keeps_formal100_and_labels_separate_six_prefix(tmp_path,monkeypatch,prefix):
+def test_checked_scene_keeps_formal100_and_uses_standard_26_preflight(tmp_path,monkeypatch,prefix):
     # Composition-only check: no transport/backend or actual policy is initialized.
     import yaml
     dist=tmp_path/'dist';sim=tmp_path/'sim';ws=tmp_path/'ws'
@@ -167,13 +169,47 @@ def test_checked_scene_keeps_formal100_and_labels_separate_six_prefix(tmp_path,m
     monkeypatch.setattr(run_gate3,'native_inspect',lambda *args:inspection)
     folder=tmp_path/'check'
     argv=['--runtime',str(runtime),'--policy-dir',str(policy),'--check','--output',str(folder),
-          '--scenario',str(run_gate3.CONFIG/'scenarios/fixed-home-100.yaml')]
+          '--scenario',str(run_gate3.CONFIG/'scenarios'/('fixed-home.yaml' if prefix else 'fixed-home-100.yaml'))]
     if prefix:argv.append('--integration-preflight')
     assert run_gate3.execute(run_gate3.parser().parse_args(argv))==0
     r=json.loads((folder/'run.json').read_text());env=r['resolved_scene_environment']
-    assert env['PP_SERVES']==('6' if prefix else '100')
+    assert env['PP_SERVES']==('26' if prefix else '100')
     assert env['PP_MOTION_IDLE_S']=='20.0' and env['PP_REQUIRED_POST_COMPLETION_TAIL_S']=='3.0'
     assert r['evaluation_kind']==('integration_preflight_not_certification' if prefix else 'formal_gate3')
+    for key,value in run_gate3.scene_environment(r['scene']).items():assert env[key]==value
     assert json.loads(env['PP_SERVES_LIST'])[:36]==sum(r['scene']['clean_serves'],[])
     profile=yaml.safe_load((folder/'fixed_home_ppq004.yaml').read_text())['hope_planner']['ros__parameters']
     assert profile['wire_identity_state_file']=='' and profile['drag_k']==.1245
+
+
+def test_behavioral_early_termination_is_not_infrastructure_failure(tmp_path):
+    preflight_fixture(tmp_path)
+    p=tmp_path/'pp_rally_report.json';r=json.loads(p.read_text());r['falls']=1;r['rows']=r['rows'][:2];p.write_text(json.dumps(r))
+    p=tmp_path/'pp_gate3_drain_report.json';r=json.loads(p.read_text());r['launched_shot_ids']=[1,2];p.write_text(json.dumps(r))
+    p=tmp_path/'pp_physical_ball_report.json';r=json.loads(p.read_text());r['rows']=r['rows'][:2];p.write_text(json.dumps(r))
+    p=tmp_path/'pp_planner_cpp_report.json';r=json.loads(p.read_text());r['rows_observed']=2;r['valid_commands']=2;p.write_text(json.dumps(r))
+    p=tmp_path/'pp_planner_debug.csv';rows=list(csv.DictReader(p.open()));save(p,rows[:2])
+    proof=preflight_gate(tmp_path)
+    assert proof['infrastructure_pass'] and not proof['readiness_pass']
+    assert {'check':'all_26_launched','category':'behavioral_early_termination'} in proof['failure_categories']
+
+
+def test_only_verified_unchanged_native_stages_migrate(tmp_path):
+    from run_model19000_gate3_repair import sha
+    binary=tmp_path/'binary';binary.write_bytes(b'verified native artifact')
+    receipt={'complete':True,'binding':'old','outputs':{str(binary):sha(binary)}}
+    argv=['unchanged','native','command']
+    def reuse(name='Runner-build',changes=ORCHESTRATION_CHANGES,old_argv=argv):
+        return reusable_stage(name,receipt,'new',argv,old_argv,'old',changes)
+    assert reuse()
+    assert not reuse(name='integration-preflight')
+    assert not reuse(changes={'hope_ws/src/hope_planner_cpp/src/planner_node.cpp'})
+    assert not reuse(old_argv=['changed','native','command'])
+    binary.write_bytes(b'changed output')
+    assert not reuse()
+
+
+def test_minimum_ball_guard_still_rejects_six():
+    import yaml
+    scene=yaml.safe_load((run_gate3.CONFIG/'scenarios/fixed-home.yaml').read_text())
+    with pytest.raises(ValueError,match='even.*26'):run_gate3.scene_environment(scene,6)
