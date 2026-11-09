@@ -46,3 +46,41 @@ the existing rigid racket and ball do not acquire plastic deformation.
 
 Official references: [MuJoCo 4.0 changelog](https://mujoco.readthedocs.io/en/4.0.0/changelog.html)
 and [speculative contacts](https://mujoco.readthedocs.io/en/4.0.0/computation/speculative.html).
+
+## Controlled high-speed racket-mesh sweep
+
+`stress_mujoco4_racket_contact.py` tests the real
+`right_racket_collision` mesh and physical-ball pair without the GRU, serve
+bank, or scorer. The A3 begins at its nominal initial posture. A ball starts
+5 cm from the racket site on either side and travels along the site's face
+normal at 5, 15, 25, 40, or 60 m/s. Each trial takes one 1, 2, 5, or 16 ms
+MuJoCo step. A separate 0.25 ms *non-speculative* simulation brackets the
+expected first impact; all engines use the same reference windows. No ball is
+teleported at a strike clock. The script retains initial and final geometric
+gaps, side of the racket, solver force and contact timing in JSON.
+
+Run each case from the branch root with the same clean environments as above:
+
+```bash
+PYTHONUTF8=1 /path/to/mujoco317/bin/python hope_training/whole_body_tracking/scripts/stress_mujoco4_racket_contact.py --output /path/outside/git/stress/mujoco317.json
+PYTHONUTF8=1 /path/to/mujoco400/bin/python hope_training/whole_body_tracking/scripts/stress_mujoco4_racket_contact.py --output /path/outside/git/stress/mujoco400.json
+PYTHONUTF8=1 /path/to/mujoco400/bin/python hope_training/whole_body_tracking/scripts/stress_mujoco4_racket_contact.py --speculative-contacts --output /path/outside/git/stress/mujoco400-speculative.json
+```
+
+The 2026-11-09 run found 32 combinations where the fine-step reference
+bracketed impact within the coarse step. Both default engines applied zero
+racket force in that *first* step; 16 of those balls ended fully beyond and
+separated from the racket, a clear tunnel. With speculative contacts, all 32
+had positive force, zero ended in a clear tunnel, and no force appeared in the
+eight not-yet-due combinations. By timestep, the default engines had 0, 2, 6,
+and 8 clear tunnels at 1, 2, 5, and 16 ms; speculative mode had zero at each.
+The default engines may detect some of the other 16 overlaps on the next step;
+they should not all be called tunnels.
+
+For example, at 25 m/s and 5 ms from the front side, both default engines let
+the ball finish 7.50 cm beyond the racket site with 4.14 cm geometric clearance
+and no racket force. Speculative mode applied 13.47 N and left the ball 2.40 cm
+on its approach side. This is evidence of collision handling in an intentionally
+extreme one-step geometry test. It does not validate restitution, spin, rally
+success, 100-ball scoring, or real hardware. The 60 m/s cases exceed the
+physical evaluator's 50 m/s safety bound; they are isolated here on purpose.
