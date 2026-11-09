@@ -555,3 +555,16 @@ See the
 [validation limits](docs/operations/runtime_public_validation.md). This checkout
 includes the ready-to-install Foxglove `.foxe`, HumanLike locomotion bundle and
 serve CSVs.
+
+<!-- four-frozen-gru-exports -->
+
+## Additional frozen recurrent exports
+
+**export verified; no new behavioral evaluation performed.** Run `gru-formal-2b8c09938a`. These bundles have no new standing/ball results or videos.
+
+| Iteration | Portable bundle | Loading and verification |
+|---|---|---|
+| 13000 | [ZIP](a3_deploy/a3_deploy_example/models/model_13000/model_13000_gru_bundle.zip) | [README](a3_deploy/a3_deploy_example/models/model_13000/README.md) |
+| 14000 | [ZIP](a3_deploy/a3_deploy_example/models/model_14000/model_14000_gru_bundle.zip) | [README](a3_deploy/a3_deploy_example/models/model_14000/README.md) |
+| 14600 | [ZIP](a3_deploy/a3_deploy_example/models/model_14600/model_14600_gru_bundle.zip) | [README](a3_deploy/a3_deploy_example/models/model_14600/README.md) |
+| 20000 | [ZIP](a3_deploy/a3_deploy_example/models/model_20000/model_20000_gru_bundle.zip) | [README](a3_deploy/a3_deploy_example/models/model_20000/README.md) |
