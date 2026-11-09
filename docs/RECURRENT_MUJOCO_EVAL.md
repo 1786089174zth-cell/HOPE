@@ -1,5 +1,9 @@
 # StationaryRally GRU MuJoCo inspection
 
+For an isolated MuJoCo 3.17.0 versus 4.0.0 physical-ball comparison, including
+opt-in speculative contacts, see [MuJoCo 4.0 recurrent comparison](MUJOCO4_RECURRENT_COMPARISON.md).
+That experiment does not replace the published reference-sequence results.
+
 This opt-in path runs the **saved GRU actor**, with explicit recurrent memory,
 using CPU ONNX Runtime. The existing feed-forward exporter, reference runner,
 and feed-forward physical-ball evaluator are unchanged. Default mode is a

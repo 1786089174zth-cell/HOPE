@@ -28,10 +28,17 @@ def dump(path, data):
 
 
 class Plant:
-    def __init__(self, manifest, physical=False, ball_slots=1, table_impact_model='soft'):
+    def __init__(self, manifest, physical=False, ball_slots=1, table_impact_model='soft', speculative_contacts=False):
         import mujoco as mj
         self.mj = mj
         self.cfg = manifest
+        self.speculative_contacts = speculative_contacts
+        if speculative_contacts and not physical:
+            raise ValueError('Speculative contacts require a physical ball')
+        if speculative_contacts and table_impact_model != 'soft':
+            raise ValueError('Speculative contacts are only supported in the exploratory soft-contact mode')
+        if speculative_contacts and not hasattr(mj.mjtEnableBit, 'mjENBL_SPECULATIVE'):
+            raise ValueError('Speculative contacts require MuJoCo 4.0 or newer')
         if table_impact_model not in ('soft','ppq004'):
             raise ValueError('Unsupported evaluation table impact model')
         self.table_impact_model=table_impact_model
@@ -44,6 +51,8 @@ class Plant:
         m=self.model
         m.opt.timestep=float(manifest['physics_dt'])
         m.opt.integrator=mj.mjtIntegrator.mjINT_IMPLICITFAST
+        if speculative_contacts:
+            m.opt.enableflags |= int(mj.mjtEnableBit.mjENBL_SPECULATIVE)
         self.dt=float(manifest['control_dt'])
         self.substeps=int(manifest['decimation'])
         assert abs(m.opt.timestep*self.substeps-self.dt)<1e-9
@@ -254,7 +263,7 @@ class Plant:
                 if thread.is_alive():raise RuntimeError('viewer render thread did not exit')
 
 
-def verify(bundle,out,physical=False):
+def verify(bundle,out,physical=False,speculative_contacts=False):
     policy=RecurrentOnnxPolicy(bundle)
     fixture=np.load(Path(bundle)/'parity_vectors.npz')
     policy.hidden=fixture['initial_h'].copy()
@@ -269,7 +278,7 @@ def verify(bundle,out,physical=False):
         np.testing.assert_allclose(action,fixture['actions'][i,0],rtol=2e-4,atol=2e-5)
         np.testing.assert_allclose(policy.hidden,fixture['hidden'][i],rtol=2e-4,atol=2e-5)
     assert policy.reset_count==1 and policy.steps==64
-    plant=Plant(policy.manifest,physical=physical)
+    plant=Plant(policy.manifest,physical=physical,speculative_contacts=speculative_contacts)
     for gid in range(plant.model.ngeom):
         name=plant.mj.mj_id2name(plant.model,plant.mj.mjtObj.mjOBJ_GEOM,gid) or ''
         if name.startswith(('gate3_table','gate3_net')):
@@ -309,6 +318,7 @@ def verify(bundle,out,physical=False):
         target.pos_w-state.base_pos_w,target.vel_w,[target.time_to_strike]]).astype(np.float32)
     np.testing.assert_allclose(obs,expected_obs,atol=1e-7)
     result={'result':'PASS','steps':64,'reset_at':int(fixture['reset_at']),
+        'mujoco_version':plant.mj.__version__,'speculative_contacts':speculative_contacts,
         'initial_hidden_nonzero':bool(np.any(fixture['initial_h'])),
         'action_max_abs_error':action_error,'hidden_max_abs_error':hidden_error,
         'tolerances':{'atol':2e-5,'rtol':2e-4,'reason':'float32 fused GRU/MLP ordering and recurrent accumulation'},
@@ -334,7 +344,7 @@ def run(args):
     if hashlib.sha256(bank_path.read_bytes()).hexdigest()!=cfg['venue_tuple_bank_sha256']:
         raise ValueError('PPQ004 bank SHA mismatch')
     bank=np.load(bank_path);rng=np.random.default_rng(args.seed)
-    plant=Plant(manifest,physical=args.physical_ball)
+    plant=Plant(manifest,physical=args.physical_ball,speculative_contacts=args.speculative_contacts)
     if args.view:plant.open_viewer()
     recorder=None
     if args.video is not None:
@@ -438,6 +448,7 @@ def run(args):
                 stages[name]={k:float(np.max([r[k] for r in selected])) for k in ['tilt_deg','drift_m','contact_foot_slip','qdes_step_rms','racket_speed']}
                 stages[name]['ready_proxy_fraction']=float(np.mean([r['ready_position_speed_proxy'] for r in selected]))
         result={'checkpoint':manifest['checkpoint'],'checkpoint_sha256':manifest['checkpoint_sha256'],
+            'mujoco_version':plant.mj.__version__,'speculative_contacts':args.speculative_contacts,
             'checkpoint_iteration':manifest['checkpoint_iteration'],'simulated_seconds':elapsed,
             'wall_seconds':time.monotonic()-begin,'control_steps':len(rows),'view_requested':args.view,'video':str(args.video) if args.video else None,
             'video_frames':recorder.frames if recorder is not None else 0,
@@ -465,7 +476,10 @@ def run(args):
             result['physical_summary']['shots']=len(pb.shots)
             result['physical_summary']['incomplete_shots']=sum(not s['complete'] for s in pb.shots)
             result['physical_summary']['max_ball_speed_mps']=pb.max_speed
+            if args.speculative_contacts:
+                result['limitations'].append('Speculative forces may precede geometric contact; contact counts and PPQ004 scoring are exploratory, not comparable to the published baseline.')
             dump(out/'physical_config.json',{'profile':pb.profile,'physics':pb.cfg,'pair_settings':pb.pair_settings,
+                'mujoco_version':plant.mj.__version__,'speculative_contacts':args.speculative_contacts,
                 'manifest':manifest,'seed':args.seed,'command':sys.argv,'physics_dt':plant.model.opt.timestep,
                 'source_sha256':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [Path(__file__),Path(__file__).with_name('recurrent_physical_ball.py'),ROOT/'a3_deploy/a3_deploy_example/reference/a3_deploy_onnx_ref_pingpong/recurrent_policy.py',ROOT/'a3_deploy/a3_deploy_example/reference/a3_deploy_onnx_ref_pingpong/observation.py']},
                 'control_dt':plant.dt,'serve_horizon':.6,'serve_plane_margin':.005,
@@ -482,6 +496,7 @@ def main():
     p.add_argument('--verify-only',action='store_true')
     p.add_argument('--video',type=Path,help='Offscreen MP4 using installed ffmpeg; requires --physical-ball and MUJOCO_GL=egl.')
     p.add_argument('--physical-ball',action='store_true',help='Real ball contacts; preserve the frozen actor and target observation contract.')
+    p.add_argument('--speculative-contacts',action='store_true',help='Experimental MuJoCo 4.0 speculative contacts; requires --physical-ball.')
     p.add_argument('--view',action='store_true')
     p.add_argument('--realtime',action='store_true')
     p.add_argument('--seconds',type=float,default=90)
@@ -491,11 +506,12 @@ def main():
                    help='Explicit evaluation start scenario; 4 reproduces the long-HOLD start duration, 0 starts PRE.')
     args=p.parse_args()
     if args.video is not None and not args.physical_ball:p.error('--video requires --physical-ball')
+    if args.speculative_contacts and not args.physical_ball:p.error('--speculative-contacts requires --physical-ball')
     if not 0<args.seconds<=120: p.error('--seconds must be in (0,120]')
     if not 0<=args.initial_hold_seconds<=10:p.error('initial HOLD must be in [0,10]')
     if args.wall_seconds is not None and not 0<args.wall_seconds<=120:p.error('wall duration must be in (0,120]')
     args.output_dir.mkdir(parents=True,exist_ok=True)
-    if args.verify_only:verify(args.bundle,args.output_dir,physical=args.physical_ball)
+    if args.verify_only:verify(args.bundle,args.output_dir,physical=args.physical_ball,speculative_contacts=args.speculative_contacts)
     else:run(args)
 
 
