@@ -4,6 +4,7 @@ from __future__ import annotations
 import math
 import torch
 
+from .reward_commands import motion_reward_command, racket_reward_command
 
 def limit_clearance_cost(q, hard_limits, margin):
     """Zero inside the buffer; quadratic approach and linear, non-saturating overrun.
@@ -27,8 +28,8 @@ def evaluate_actual_joint_limit(env, margin_rad=0.0872664626, waist_margin_rad=0
         raise ValueError("invalid actual hard-limit clearance parameters")
     action = env.action_manager.get_term("joint_pos")
     robot = action._asset
-    cmd = env.command_manager.get_term("racket_target")
-    motion = env.command_manager.get_term("motion")
+    cmd = racket_reward_command(env)
+    motion = motion_reward_command(env)
     key = (margin_rad, waist_margin_rad)
     cache = getattr(env, "_actual_joint_limit_cache", None)
     if cache is None or cache[0] != key:

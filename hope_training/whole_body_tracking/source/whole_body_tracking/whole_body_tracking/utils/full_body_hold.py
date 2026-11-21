@@ -7,6 +7,7 @@ All calculations are vectorized; cached references are mapped by joint name.
 import math
 import torch
 
+from .reward_commands import motion_reward_command, racket_reward_command
 from .task_pose_reference import env_reference, load_reference, reference_joints
 from .ready_recovery import bounded_debt, recovery_gate, _log
 
@@ -94,7 +95,7 @@ def phase_summaries(metrics):
 
 
 def _state(env):
-    cmd = env.command_manager.get_term("racket_target")
+    cmd = racket_reward_command(env)
     robot = cmd.robot
     cache = getattr(env, "_full_body_hold_reference", None)
     if cache is None:
@@ -141,7 +142,7 @@ def full_body_hold(env, start_steps=448000, ramp_steps=128000, cost_scale=1.8,
     if completion_blend and not positive_kernel:
         raise ValueError("complete HOLD requires a positive pose kernel")
     cmd, robot, ids, bodies, ref, pose = _state(env)
-    motion = env.command_manager.get_term("motion")
+    motion = motion_reward_command(env)
     gate = recovery_gate(motion.in_hold, cmd.time_to_strike, motion)
     scale = min(1., max(0., (env.common_step_counter-start_steps)/ramp_steps))
     q = robot.data.joint_pos[:, ids]
@@ -286,7 +287,7 @@ def full_body_quiet(env, start_steps=448000, ramp_steps=128000, state_independen
     if start_steps < 0 or ramp_steps <= 0:
         raise ValueError("invalid full-body quiet curriculum")
     cmd, robot, ids, _, ref, _ = _state(env)
-    motion = env.command_manager.get_term("motion")
+    motion = motion_reward_command(env)
     gate = recovery_gate(motion.in_hold, cmd.time_to_strike, motion)
     distance = (cmd.base_target_pos_w-cmd.base_pos_w[:, :2]).norm(dim=-1)
     error = (robot.data.joint_pos[:, ids]-ref).abs().amax(-1)

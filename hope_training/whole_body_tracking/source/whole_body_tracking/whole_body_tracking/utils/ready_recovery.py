@@ -2,6 +2,7 @@
 import math
 import torch
 
+from .reward_commands import motion_reward_command, racket_reward_command
 from .task_pose_reference import load_reference, reference_joints
 
 
@@ -42,8 +43,8 @@ def station_debt(delta, velocity, position_margin=.03, position_std=.10,
 def _context(env, start_steps, ramp_steps):
     if start_steps < 0 or ramp_steps <= 0:
         raise ValueError("invalid ready-state curriculum")
-    cmd = env.command_manager.get_term("racket_target")
-    motion = env.command_manager.get_term("motion")
+    cmd = racket_reward_command(env)
+    motion = motion_reward_command(env)
     gate = recovery_gate(motion.in_hold, cmd.time_to_strike, motion)
     scale = min(1., max(0., (env.common_step_counter - start_steps) / ramp_steps))
     return cmd, gate, scale

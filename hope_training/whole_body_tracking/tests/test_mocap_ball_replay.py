@@ -36,6 +36,7 @@ def elastic_table_contact(v, w, params):
 replay = load_module("mocap_ball_replay")
 paddle = load_module("mocap_paddle_contact")
 preparation = load_module("mocap_preparation")
+reward_reference = load_module("mocap_reward_reference")
 
 
 class MocapReplayTests(unittest.TestCase):
@@ -209,6 +210,16 @@ class PaddleSweepTests(unittest.TestCase):
 
 
 class PreparationRewardTests(unittest.TestCase):
+    def test_reward_clock_uses_contact_or_replay_end_for_recovery(self):
+        now = torch.tensor([0.25, 0.43, 0.43, 0.45, 0.62, 0.10])
+        nominal = torch.full_like(now, 0.40)
+        end = torch.full_like(now, 0.52)
+        contacted = torch.tensor([False, False, True, True, False, False])
+        offset = torch.tensor([0., 0., 0.027, 0.027, 0., 0.])
+        hit_now = torch.tensor([False, False, True, False, False, False])
+        clock = reward_reference.replay_reward_clock(now, nominal, end, contacted, offset, hit_now)
+        torch.testing.assert_close(clock, torch.tensor([0.15, 0., 0., -0.023, -0.10, 0.30]))
+
     def test_preparation_credits_only_new_progress_toward_ready(self):
         best = torch.tensor([-1.0])
         paid = []

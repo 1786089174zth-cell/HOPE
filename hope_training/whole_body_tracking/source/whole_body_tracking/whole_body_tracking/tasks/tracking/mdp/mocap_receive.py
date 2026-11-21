@@ -16,6 +16,7 @@ from whole_body_tracking.tasks.table_tennis import geometry as table_geometry
 from .mocap_ball_replay import ReplayBatch, extend_bank_flights, reconstruct_bank_flights, step_with_table
 from .mocap_paddle_contact import sweep_ball_against_disc
 from .mocap_preparation import advance_preparation_progress
+from .mocap_reward_reference import MocapRewardReference
 from .physical_ball import (
     RACKET_CONTACT_RADIUS, load_venue_table_params, net_plane_crossing, predict_table_contact, racket_impulse,
 )
@@ -52,6 +53,10 @@ class MocapReceiveCommand(CommandTerm):
         self._prev_valid = torch.zeros_like(self._flight, dtype=torch.bool)
         self._prev_blade = torch.zeros((self.num_envs, 3), device=self.device)
         self._prev_blade_normal = torch.zeros_like(self._prev_blade)
+        self._impact_ball_w = torch.zeros_like(self._prev_blade)
+        self._impact_blade_w = torch.zeros_like(self._prev_blade)
+        self._impact_blade_vel = torch.zeros_like(self._prev_blade)
+        self._impact_face = torch.zeros_like(self._prev_blade)
         self._contacted = torch.zeros_like(self._prev_valid)
         self._rim_contact = torch.zeros_like(self._prev_valid)
         self._return_active = torch.zeros_like(self._prev_valid)
@@ -69,6 +74,14 @@ class MocapReceiveCommand(CommandTerm):
         self.approach = torch.zeros_like(self._elapsed)
         self.metrics["contact"] = torch.zeros_like(self._elapsed)
         self._table_offset = torch.tensor(cfg.table_offset, device=self.device)
+        self._strike_positions = torch.stack(
+            [torch.as_tensor(positions[-1], dtype=torch.float32, device=self.device)
+             for _, positions in flights],
+        ) + self._table_offset
+        with np.load(cfg.bank, allow_pickle=False) as bank:
+            self._target_velocities = torch.as_tensor(
+                bank["target_velocity"][row_ids], dtype=torch.float32, device=self.device,
+            )
         self.preparation_progress = torch.zeros_like(self._elapsed)
         self._preparation_best = torch.full_like(self._elapsed, -1.0)
         self._preparation_targets = None
@@ -78,12 +91,9 @@ class MocapReceiveCommand(CommandTerm):
             self._row_ids = row_ids
             self._first_visible_s = torch.full_like(self._elapsed, torch.inf)
         if cfg.preparation_enabled:
-            self._strike_positions = torch.stack(
-                [torch.as_tensor(positions[-1], dtype=torch.float32, device=self.device)
-                 for _, positions in flights],
-            ) + self._table_offset
             self._upright_min = math.cos(math.radians(cfg.preparation_max_tilt_deg))
             self.metrics["preparation_progress"] = torch.zeros_like(self._elapsed)
+        env._mocap_reward_reference = MocapRewardReference(self, env)
         env.sim.add_physics_callback("hope_mocap_receive", self._physics_step)
 
     @property
@@ -308,8 +318,14 @@ class MocapReceiveCommand(CommandTerm):
         twist = (angular_velocity * face).sum(dim=-1, keepdim=True) * face
         omega = rotation[impact] / span + twist
         point_velocity = blade_velocity + torch.linalg.cross(omega, point)
+        contact_local = blade_at_hit + point
+        origins = self._env.scene.env_origins[ids]
+        self._impact_ball_w[ids] = contact_local + self._ball_params.ball_radius * outward + origins
+        self._impact_blade_w[ids] = blade_at_hit + origins
+        self._impact_blade_vel[ids] = blade_velocity
+        self._impact_face[ids] = face
         self._rim_contact[ids] = torch.linalg.vector_norm(point, dim=-1) >= RACKET_CONTACT_RADIUS - 1e-6
-        self._start_returns(ids, time, blade_at_hit + point, ball_velocity, point_velocity, outward)
+        self._start_returns(ids, time, contact_local, ball_velocity, point_velocity, outward)
         self._advance_returns(dt_left[:, None], ids)
         hit[ids] = True
         return hit
@@ -444,14 +460,12 @@ def configure_mocap_receive(env_cfg, replay, repo_root):
     env_cfg.observations.critic = copy.deepcopy(policy)
     env_cfg.observations.critic.enable_corruption = False
 
-    # Keep robot regularization and replace the old entire-swing tracking rewards.
-    retained = {
-        "joint_torques", "joint_vel", "joint_acc", "action_rate",
-        "upright", "base_ang_vel_xy", "base_lin_vel_z", "dynamic_support",
-    }
-    for name, term in vars(env_cfg.rewards).items():
-        if isinstance(term, RewardTermCfg) and name not in retained:
-            setattr(env_cfg.rewards, name, None)
+    # The legacy MotionCommand is held during replay. Its full reference swing
+    # has no synchronized body trajectory here. Keep the stationary terms and
+    # use the same-row racket reference for striking instead.
+    for name in ("motion_body_pos", "motion_body_ori", "motion_body_lin_vel",
+                 "motion_body_ang_vel", "motion_global_anchor_ori"):
+        setattr(env_cfg.rewards, name, None)
     env_cfg.rewards.replay_contact = RewardTermCfg(func=replay_contact, weight=2.0)
     env_cfg.rewards.replay_approach = RewardTermCfg(func=replay_approach, weight=2.0)
     if prep_weight > 0.0:

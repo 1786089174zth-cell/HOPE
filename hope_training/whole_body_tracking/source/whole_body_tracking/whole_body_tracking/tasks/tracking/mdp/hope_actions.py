@@ -27,6 +27,8 @@ from isaaclab.envs.mdp.actions.actions_cfg import JointPositionActionCfg
 from isaaclab.envs.mdp.actions.joint_actions import JointPositionAction
 from isaaclab.utils import configclass
 
+from whole_body_tracking.utils.reward_commands import motion_reward_command, racket_reward_command
+
 from .qdes_contract import (
     feasible_qdes_v3,
     feasible_qdes_v3_dynamic_inputs_finite,
@@ -2890,9 +2892,9 @@ def executed_qdes_difference_l2(
         rows = torch.where(intervention_effective)[0]
         live[rows[:, None], intervention_cols[None, :]] = False
 
-    command = env.command_manager.get_term(command_name)
+    command = racket_reward_command(env, command_name)
     try:
-        motion = env.command_manager.get_term("motion")
+        motion = motion_reward_command(env)
     except (KeyError, ValueError):
         motion = None
     held = getattr(motion, "in_hold", None)
@@ -2931,7 +2933,7 @@ def executed_qdes_difference_l2(
     motion_term = getattr(env.command_manager, "get_term", None)
     if motion_term is not None:
         try:
-            _motion = env.command_manager.get_term("motion")
+            _motion = motion_reward_command(env)
         except (KeyError, ValueError):
             _motion = None
         if _motion is not None and hasattr(_motion, "in_hold"):

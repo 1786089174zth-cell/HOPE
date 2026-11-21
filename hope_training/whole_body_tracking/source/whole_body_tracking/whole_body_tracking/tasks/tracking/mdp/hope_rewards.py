@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 from isaaclab.utils.math import quat_apply, quat_rotate_inverse, yaw_quat
 
+from whole_body_tracking.utils.reward_commands import motion_reward_command, racket_reward_command
 from whole_body_tracking.tasks.tracking.mdp.hope_commands import RacketTargetCommand
 from whole_body_tracking.tasks.tracking.mdp.recovery_safe_set import (
     actual_q_stopping_violation,
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
 
 
 def _cmd(env: ManagerBasedRLEnv, command_name: str) -> RacketTargetCommand:
-    return env.command_manager.get_term(command_name)
+    return racket_reward_command(env, command_name)
 
 
 def _record_metric_snapshot(metrics: dict, name: str, value: torch.Tensor) -> None:
@@ -76,7 +77,12 @@ def _position_guidance_gate(cmd: RacketTargetCommand) -> torch.Tensor:
     window_s = float(getattr(cmd.cfg, "position_guidance_window_s", 0.0))
     if window_s <= 0.0:
         return cmd.strike_window
-    return cmd.time_to_strike.abs() <= window_s + 1.0e-6
+    return _position_guidance_clock(cmd).abs() <= window_s + 1.0e-6
+
+
+def _position_guidance_clock(cmd: RacketTargetCommand) -> torch.Tensor:
+    clock = getattr(cmd, "guidance_time_to_strike", None)
+    return cmd.time_to_strike if clock is None else clock
 
 
 def _moving_position_kernel(
@@ -85,7 +91,7 @@ def _moving_position_kernel(
     """Moving-target kernel without a time gate or temporal scale."""
     target_pos_now = (
         cmd.racket_target_pos_w
-        - cmd.racket_target_vel_w * cmd.time_to_strike.unsqueeze(-1)
+        - cmd.racket_target_vel_w * _position_guidance_clock(cmd).unsqueeze(-1)
     )
     error = torch.sum(torch.square(cmd.racket_pos_w - target_pos_now), dim=-1)
     from whole_body_tracking.utils.task_tracking import tracking_kernel
@@ -1977,7 +1983,7 @@ def racket_exact_position_debt(
     debt = torch.where(
         scaled <= 1.0, 0.5 * torch.square(scaled), scaled - 0.5
     )
-    gate = cmd.time_to_strike.abs() <= float(window_s) + 1.0e-6
+    gate = _position_guidance_clock(cmd).abs() <= float(window_s) + 1.0e-6
     return debt * gate.float()
 
 
@@ -2208,7 +2214,7 @@ def _post_swing_recovery_gate_and_scale(
             raise ValueError(
                 "replay/curriculum-scaled recovery debt requires motion_command_name"
             )
-        motion = env.command_manager.get_term(motion_command_name)
+        motion = motion_reward_command(env, motion_command_name)
         if include_replay:
             replay_active = getattr(motion, "post_swing_replay_active", None)
             if replay_active is None:
@@ -3712,7 +3718,7 @@ def left_wrist_reference_debt(
         raise ValueError(f"left-wrist max_blend must be in [0,1], got {max_blend}")
 
     cmd = _cmd(env, command_name)
-    motion = env.command_manager.get_term(motion_command_name)
+    motion = motion_reward_command(env, motion_command_name)
     asset = env.scene[asset_cfg.name]
     joint_ids = asset_cfg.joint_ids
     if isinstance(joint_ids, slice) or len(joint_ids) != 3:
@@ -3772,7 +3778,7 @@ def rally_idle_left_wrist_debt(
         )
 
     cmd = _cmd(env, command_name)
-    motion = env.command_manager.get_term(motion_command_name)
+    motion = motion_reward_command(env, motion_command_name)
     asset = env.scene[asset_cfg.name]
     joint_ids = asset_cfg.joint_ids
     if isinstance(joint_ids, slice) or len(joint_ids) != 3:
@@ -3858,8 +3864,8 @@ def right_elbow_extension_debt(
 
 def _quiet_command_phase(env):
     """Exogenous HOLD or outside the live strike; never gated by achieved speed."""
-    cmd = env.command_manager.get_term("racket_target")
-    held = env.command_manager.get_term("motion").in_hold
+    cmd = racket_reward_command(env)
+    held = motion_reward_command(env).in_hold
     return cmd, held | (cmd.time_to_strike > 0.20) | (cmd.time_to_strike < -0.30)
 
 
@@ -4022,8 +4028,10 @@ def _rally_ready_stance_gate(
             "ready-stance station_reach/heading_gate must be positive and speed_gate "
             f"non-negative, got {station_reach}/{heading_gate}/{speed_gate}"
         )
-    held_metric = motion.metrics.get("in_hold") if hasattr(motion, "metrics") else None
-    in_hold = (held_metric > 0.5) if held_metric is not None else getattr(motion, "in_hold", None)
+    in_hold = getattr(cmd, "reward_in_hold", None)
+    if in_hold is None:
+        held_metric = motion.metrics.get("in_hold") if hasattr(motion, "metrics") else None
+        in_hold = (held_metric > 0.5) if held_metric is not None else getattr(motion, "in_hold", None)
     if in_hold is None:
         raise RuntimeError(
             "RallyV11 ready-stance rewards require MotionCommand.in_hold; refusing a "
@@ -4091,7 +4099,7 @@ def rally_ready_deadline_debt(
             f"window={final_window_s}"
         )
     cmd = _cmd(env, command_name)
-    motion = env.command_manager.get_term(motion_command_name)
+    motion = motion_reward_command(env, motion_command_name)
     held_metric = motion.metrics.get("in_hold") if hasattr(motion, "metrics") else None
     if held_metric is None:
         raise RuntimeError("RallyV11 ready-deadline debt requires MotionCommand.metrics['in_hold']")
@@ -4247,7 +4255,7 @@ def rally_ready_stance_width_debt(
     if not 0.0 < lo < hi or std <= 0.0:
         raise ValueError(f"invalid ready stance-width band/std: {lo}/{hi}/{std}")
     cmd = _cmd(env, command_name)
-    motion = env.command_manager.get_term(motion_command_name)
+    motion = motion_reward_command(env, motion_command_name)
     asset = env.scene[asset_cfg.name]
     body_ids = asset_cfg.body_ids
     if isinstance(body_ids, slice) or len(body_ids) != 2:
@@ -4343,7 +4351,7 @@ def rally_ready_leg_settle_debt(
     if margin < 0.0 or std <= 0.0:
         raise ValueError(f"invalid ready-leg margin/std: {margin}/{std}")
     cmd = _cmd(env, command_name)
-    motion = env.command_manager.get_term(motion_command_name)
+    motion = motion_reward_command(env, motion_command_name)
     asset = env.scene[asset_cfg.name]
     joint_ids = asset_cfg.joint_ids
     if isinstance(joint_ids, slice) or len(joint_ids) != 12:
