@@ -1,6 +1,7 @@
 """Opt-in Isaac Lab task wiring for receiving an incoming ball from the PPQ004 bank."""
 
 import copy
+import json
 import math
 from pathlib import Path
 
@@ -39,10 +40,16 @@ class MocapReceiveCommand(CommandTerm):
         self.preparation_progress = torch.zeros_like(self._elapsed)
         self._preparation_best = torch.full_like(self._elapsed, -1.0)
         self._preparation_targets = None
-        if cfg.preparation_enabled:
+        self._trial_log = Path(cfg.trial_log) if cfg.trial_log else None
+        if self._trial_log is not None:
+            self._trial_log.touch(exist_ok=False)
+            self._row_ids = row_ids
+            self._first_visible_s = torch.full_like(self._elapsed, torch.inf)
+        if cfg.preparation_enabled or self._trial_log is not None:
             self._strike_times = torch.tensor(
                 [float(time[-1]) for time, _ in flights], dtype=torch.float32, device=self.device,
             )
+        if cfg.preparation_enabled:
             self._strike_positions = torch.stack(
                 [torch.as_tensor(positions[-1], dtype=torch.float32, device=self.device)
                  for _, positions in flights],
@@ -71,7 +78,46 @@ class MocapReceiveCommand(CommandTerm):
         self.approach[env_ids] = 0.0
         self.preparation_progress[env_ids] = 0.0
         self._preparation_best[env_ids] = -1.0
+        if self._trial_log is not None:
+            self._first_visible_s[env_ids] = torch.inf
         self._started[env_ids] = True
+
+    def reset(self, env_ids=None):
+        if self._trial_log is not None:
+            self._write_trials(env_ids, "reset")
+        return super().reset(env_ids)
+
+    def write_final_trials(self):
+        if self._trial_log is not None:
+            self._write_trials(None, "run_end")
+
+    def _write_trials(self, env_ids, ended_by):
+        ids = torch.arange(self.num_envs, device=self.device)[slice(None) if env_ids is None else env_ids]
+        ids = ids[self._started[ids] & (self._elapsed[ids] > 0.0)]
+        flight = self._flight[ids]
+        end = self._delay[ids] + self._strike_times[flight]
+        prep = self.metrics.get("preparation_progress", self.preparation_progress)[ids]
+        columns = torch.stack((
+            ids, flight, self._first_visible_s[ids], end, self._elapsed[ids],
+            self._contacted[ids], prep,
+        ), dim=-1).cpu().tolist()
+        with self._trial_log.open("a", encoding="utf-8") as stream:
+            for env, shot, seen, end_s, elapsed, hit, progress in columns:
+                visible = math.isfinite(seen)
+                if hit:
+                    outcome = "hit"
+                elif elapsed >= end_s:
+                    outcome = "miss" if visible else "no_observation"
+                else:
+                    outcome = "interrupted" if ended_by == "reset" else "incomplete"
+                record = {
+                    "env": int(env), "bank_row": self._row_ids[int(shot)],
+                    "side": "forehand" if shot < self.cfg.rows_per_side else "backhand",
+                    "outcome": outcome, "ended_by": ended_by,
+                    "visible_lead_ms": 1000.0 * (end_s - seen) if visible else None,
+                    "preparation_progress": progress, "elapsed_s": elapsed,
+                }
+                stream.write(json.dumps(record, allow_nan=False) + "\n")
 
     def _update_metrics(self):
         pass  # The physics callback records contact before the episode can reset.
@@ -80,6 +126,10 @@ class MocapReceiveCommand(CommandTerm):
         # Isaac Lab computes rewards before commands and observations.
         self.hit_now.zero_()
         self.preparation_progress.zero_()
+        if self._trial_log is not None:
+            latest_is_visible = self.command[:, 4].bool()
+            first = latest_is_visible & torch.isinf(self._first_visible_s)
+            self._first_visible_s.copy_(torch.where(first, self._elapsed, self._first_visible_s))
 
     def _get_preparation_targets(self, racket):
         if self._preparation_targets is None:
@@ -158,6 +208,7 @@ class MocapReceiveCommandCfg(CommandTermCfg):
     preparation_reference_lead_s: float = 0.20
     preparation_distance_scale_m: float = 0.15
     preparation_max_tilt_deg: float = 20.0
+    trial_log: str | None = None
 
 
 def ball_history(env):
@@ -207,6 +258,7 @@ def configure_mocap_receive(env_cfg, replay, repo_root):
         preparation_enabled=prep_weight > 0.0, preparation_window_s=(late, early),
         preparation_reference_lead_s=reference_lead, preparation_distance_scale_m=distance_scale,
         preparation_max_tilt_deg=tilt,
+        trial_log=str(Path(replay["trial_log"]).resolve()) if replay.get("trial_log") else None,
     )
 
     policy = env_cfg.observations.policy

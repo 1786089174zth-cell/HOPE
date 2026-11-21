@@ -31,6 +31,7 @@ mocap_replay:
   bank_seed: 0
   sensor_delay_s: 0.010
   max_age_s: 0.050
+  trial_log: null
   preparation:
     weight: 0.25
     window_s: [0.10, 0.30]

@@ -474,6 +474,8 @@ def _run(cfg):
             profile.dump_stats(profile_path)
     else:
         runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=not mocap_replay)
+    if mocap_replay:
+        env.unwrapped.command_manager.get_term("mocap_receive").write_final_trials()
     env.close()
 
 
