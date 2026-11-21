@@ -11,20 +11,37 @@ from isaaclab.managers import CommandTerm, CommandTermCfg, ObservationTermCfg, R
 from isaaclab.utils import configclass
 from isaaclab.utils.math import quat_apply
 
-from .mocap_ball_replay import ReplayBatch, reconstruct_bank_flights
+from whole_body_tracking.tasks.table_tennis import geometry as table_geometry
+
+from .mocap_ball_replay import ReplayBatch, extend_bank_flights, reconstruct_bank_flights, step_with_table
 from .mocap_preparation import advance_preparation_progress
-from .physical_ball import blade_disc_contact
-from .virtual_ball import load_venue_params, rk4_step
+from .physical_ball import (
+    blade_disc_contact, load_venue_table_params, net_plane_crossing, predict_table_contact, racket_impulse,
+)
+from .virtual_ball import load_venue_params, orient_normal, rk4_step
 
 
 class MocapReceiveCommand(CommandTerm):
     def __init__(self, cfg, env):
         super().__init__(cfg, env)
+        self._ball_params = load_venue_params()
+        self._table_params = load_venue_table_params()
         flights, row_ids = reconstruct_bank_flights(
             Path(cfg.bank), cfg.bank_sha256, cfg.rows_per_side, cfg.bank_seed,
-            cfg.table_offset, rk4_step, load_venue_params(),
+            cfg.table_offset, rk4_step, self._ball_params,
         )
-        self._replay = ReplayBatch.from_flights(flights, self.device)
+        self._strike_times = torch.tensor(
+            [time[-1] for time, _ in flights], dtype=torch.float32, device=self.device,
+        )
+        extended, spin = extend_bank_flights(
+            flights, Path(cfg.bank), row_ids, cfg.post_strike_extension_s, cfg.table_offset,
+            rk4_step, self._ball_params, predict_table_contact, self._table_params,
+        )
+        self._replay_end_times = torch.tensor(
+            [time[-1] for time, _ in extended], dtype=torch.float32, device=self.device,
+        )
+        self._replay_spin = torch.as_tensor(spin, dtype=torch.float32, device=self.device)
+        self._replay = ReplayBatch.from_flights(extended, self.device)
         self._flight_count = self._replay.times.shape[0]
         print(f"[mocap receive] reconstructed {self._flight_count} incoming flights from {cfg.bank}", flush=True)
         print(f"[mocap receive] bank SHA-256={cfg.bank_sha256}; selected rows={row_ids}", flush=True)
@@ -34,6 +51,16 @@ class MocapReceiveCommand(CommandTerm):
         self._prev_dn = torch.zeros_like(self._elapsed)
         self._prev_valid = torch.zeros_like(self._flight, dtype=torch.bool)
         self._contacted = torch.zeros_like(self._prev_valid)
+        self._return_active = torch.zeros_like(self._prev_valid)
+        self._paddle_rebound = torch.zeros_like(self._prev_valid)
+        self._table_bounces = torch.zeros_like(self._flight)
+        self._opponent_bounces = torch.zeros_like(self._flight)
+        self._net_blocked = torch.zeros_like(self._prev_valid)
+        self._hit_offset_s = torch.zeros_like(self._elapsed)
+        self._outbound_vx = torch.zeros_like(self._elapsed)
+        self._return_pos = torch.zeros((self.num_envs, 3), device=self.device)
+        self._return_vel = torch.zeros_like(self._return_pos)
+        self._return_spin = torch.zeros_like(self._return_pos)
         self.hit_now = torch.zeros_like(self._prev_valid)
         self._started = torch.zeros_like(self._prev_valid)
         self.approach = torch.zeros_like(self._elapsed)
@@ -47,10 +74,6 @@ class MocapReceiveCommand(CommandTerm):
             self._trial_log.touch(exist_ok=False)
             self._row_ids = row_ids
             self._first_visible_s = torch.full_like(self._elapsed, torch.inf)
-        if cfg.preparation_enabled or self._trial_log is not None:
-            self._strike_times = torch.tensor(
-                [float(time[-1]) for time, _ in flights], dtype=torch.float32, device=self.device,
-            )
         if cfg.preparation_enabled:
             self._strike_positions = torch.stack(
                 [torch.as_tensor(positions[-1], dtype=torch.float32, device=self.device)
@@ -76,6 +99,13 @@ class MocapReceiveCommand(CommandTerm):
         self._elapsed[env_ids] = 0.0
         self._prev_valid[env_ids] = False
         self._contacted[env_ids] = False
+        self._return_active[env_ids] = False
+        self._paddle_rebound[env_ids] = False
+        self._table_bounces[env_ids] = 0
+        self._opponent_bounces[env_ids] = 0
+        self._net_blocked[env_ids] = False
+        self._hit_offset_s[env_ids] = 0.0
+        self._outbound_vx[env_ids] = 0.0
         self.hit_now[env_ids] = False
         self.approach[env_ids] = 0.0
         self.preparation_progress[env_ids] = 0.0
@@ -97,14 +127,18 @@ class MocapReceiveCommand(CommandTerm):
         ids = torch.arange(self.num_envs, device=self.device)[slice(None) if env_ids is None else env_ids]
         ids = ids[self._started[ids] & (self._elapsed[ids] > 0.0)]
         flight = self._flight[ids]
-        end = self._delay[ids] + self._strike_times[flight]
+        nominal = self._delay[ids] + self._strike_times[flight]
+        end = self._delay[ids] + self._replay_end_times[flight]
         prep = self.metrics.get("preparation_progress", self.preparation_progress)[ids]
         columns = torch.stack((
-            ids, flight, self._first_visible_s[ids], end, self._elapsed[ids],
-            self._contacted[ids], prep,
+            ids, flight, self._first_visible_s[ids], nominal, end, self._elapsed[ids],
+            self._contacted[ids], prep, self._hit_offset_s[ids], self._outbound_vx[ids],
+            self._paddle_rebound[ids], self._table_bounces[ids], self._opponent_bounces[ids],
+            self._net_blocked[ids],
         ), dim=-1).cpu().tolist()
         with self._trial_log.open("a", encoding="utf-8") as stream:
-            for env, shot, seen, end_s, elapsed, hit, progress in columns:
+            for (env, shot, seen, nominal_s, end_s, elapsed, hit, progress, hit_offset,
+                 outbound_vx, rebound, bounces, opponent_bounces, net_blocked) in columns:
                 visible = math.isfinite(seen)
                 if hit:
                     outcome = "hit"
@@ -116,8 +150,12 @@ class MocapReceiveCommand(CommandTerm):
                     "env": int(env), "bank_row": self._row_ids[int(shot)],
                     "side": "forehand" if shot < self.cfg.rows_per_side else "backhand",
                     "outcome": outcome, "ended_by": ended_by,
-                    "visible_lead_ms": 1000.0 * (end_s - seen) if visible else None,
+                    "visible_lead_ms": 1000.0 * (nominal_s - seen) if visible else None,
                     "preparation_progress": progress, "elapsed_s": elapsed,
+                    "hit_offset_ms": 1000.0 * hit_offset if hit else None,
+                    "outbound_vx_m_s": outbound_vx if hit else None,
+                    "paddle_rebound": bool(rebound), "table_bounces": int(bounces),
+                    "opponent_table_bounces": int(opponent_bounces), "net_blocked": bool(net_blocked),
                 }
                 stream.write(json.dumps(record, allow_nan=False) + "\n")
 
@@ -169,6 +207,7 @@ class MocapReceiveCommand(CommandTerm):
 
     def _physics_step(self, dt):
         self._elapsed += dt
+        self._advance_returns(dt)
         now = self._elapsed - self._delay
         position, velocity, valid = self._replay.physical_sample(
             self._flight, now, max_gap_s=self.cfg.max_gap_s,
@@ -181,6 +220,7 @@ class MocapReceiveCommand(CommandTerm):
             ball, velocity, blade, blade_vel, normal, self._prev_dn, self._prev_valid & active,
         )
         hit &= active
+        self._start_returns(hit, now, ball, velocity, blade, blade_vel, normal)
         self._contacted |= hit
         self.hit_now |= hit
         self.metrics["contact"].add_(hit)
@@ -204,6 +244,57 @@ class MocapReceiveCommand(CommandTerm):
             self.preparation_progress.add_(progress)
             self.metrics["preparation_progress"].add_(progress)
 
+    def _start_returns(self, hit, now, ball, velocity, blade, blade_vel, normal):
+        ids = hit.nonzero(as_tuple=True)[0]
+        if ids.numel() == 0:
+            return
+        flight = self._flight[ids]
+        offset = now[ids] - self._strike_times[flight]
+        spin_sample = (offset * 1000.0).floor().long().clamp(0, self._replay_spin.shape[1] - 1)
+        face = orient_normal(normal[ids], velocity[ids], blade_vel[ids])
+        outbound, spin = racket_impulse(
+            velocity[ids], blade_vel[ids], face, self._replay_spin[flight, spin_sample], self._ball_params,
+        )
+        # Keep the impact's tangential location, placing the center one radius off the face.
+        depth = ((ball[ids] - blade[ids]) * face).sum(dim=-1, keepdim=True)
+        self._return_pos[ids] = (
+            ball[ids] + (self._ball_params.ball_radius - depth) * face - self._env.scene.env_origins[ids]
+        )
+        self._return_vel[ids] = outbound
+        self._return_spin[ids] = spin
+        incoming_normal_speed = ((velocity[ids] - blade_vel[ids]) * face).sum(dim=-1)
+        outgoing_normal_speed = ((outbound - blade_vel[ids]) * face).sum(dim=-1)
+        self._paddle_rebound[ids] = (incoming_normal_speed < 0.0) & (outgoing_normal_speed > 0.0)
+        self._hit_offset_s[ids] = offset
+        self._outbound_vx[ids] = outbound[:, 0]
+        self._return_active[ids] = True
+
+    def _advance_returns(self, dt):
+        ids = self._return_active.nonzero(as_tuple=True)[0]
+        if ids.numel() == 0:
+            return
+        near_x, _, surface_z = self.cfg.table_offset
+        net_x = near_x + table_geometry.NET_X
+        previous = self._return_pos[ids]
+        p, v, w, bounce, _, impact = step_with_table(
+            previous, self._return_vel[ids], self._return_spin[ids], dt,
+            rk4_step, self._ball_params, predict_table_contact, self._table_params, near_x, surface_z,
+        )
+        # If an impact precedes the net in this step, use the incoming leg up to that impact.
+        net_check_end = torch.where(bounce[:, None], impact, p)
+        crossed, net_z = net_plane_crossing(previous, net_check_end, net_x)
+        fraction = ((net_x - previous[:, 0]) / (net_check_end[:, 0] - previous[:, 0]).clamp_min(1e-9))
+        net_y = torch.lerp(previous[:, 1], net_check_end[:, 1], fraction.clamp(0.0, 1.0))
+        radius = self._ball_params.ball_radius
+        blocked = crossed & (net_y.abs() <= table_geometry.TABLE_WIDTH / 2 + table_geometry.NET_OVERHANG + radius)
+        blocked &= (net_z < surface_z + table_geometry.NET_HEIGHT + radius) & (net_z >= surface_z - radius)
+        bounce &= ~blocked
+        self._return_pos[ids], self._return_vel[ids], self._return_spin[ids] = p, v, w
+        self._net_blocked[ids] |= blocked
+        self._table_bounces[ids] += bounce.long()
+        self._opponent_bounces[ids] += (bounce & (impact[:, 0] > net_x)).long()
+        self._return_active[ids] = ~blocked & (p[:, 2] > radius)
+
 
 @configclass
 class MocapReceiveCommandCfg(CommandTermCfg):
@@ -217,6 +308,7 @@ class MocapReceiveCommandCfg(CommandTermCfg):
     sensor_delay_s: float = 0.010
     max_age_s: float = 0.050
     max_gap_s: float = 0.020
+    post_strike_extension_s: float = 0.120
     approach_distance_m: float = 0.15
     preparation_enabled: bool = False
     preparation_window_s: tuple[float, float] = (0.10, 0.30)
@@ -247,6 +339,10 @@ def configure_mocap_receive(env_cfg, replay, repo_root):
     age = float(replay["max_age_s"])
     if not (math.isfinite(delay) and math.isfinite(age) and 0.0 <= delay < age):
         raise ValueError("mocap replay requires 0 <= sensor_delay_s < max_age_s")
+    extension = float(replay.get("post_strike_extension_s", 0.120))
+    if not (math.isfinite(extension) and extension >= 0.0
+            and math.isclose(extension * 1000, round(extension * 1000), abs_tol=1e-8)):
+        raise ValueError("mocap replay extension must be a nonnegative whole number of milliseconds")
     racket = env_cfg.commands.racket_target
     if racket.venue_tuple_enabled or racket.virtual_ball or racket.physical_ball:
         raise ValueError("mocap replay must be the only source of incoming balls")
@@ -267,6 +363,7 @@ def configure_mocap_receive(env_cfg, replay, repo_root):
         raise ValueError("invalid mocap preparation weight, lead window, distance scale or tilt limit")
     env_cfg.commands.mocap_receive = MocapReceiveCommandCfg(
         resampling_time_range=(1e6, 1e6), sensor_delay_s=delay, max_age_s=age,
+        post_strike_extension_s=extension,
         bank=str(bank), bank_sha256=str(racket.venue_tuple_bank_sha256),
         rows_per_side=int(replay["rows_per_side"]), bank_seed=int(replay["bank_seed"]),
         table_offset=(float(racket.vb_table_near_x), 0.7625, float(racket.vb_table_surface_z)),

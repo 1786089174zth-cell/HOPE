@@ -68,6 +68,48 @@ def reconstruct_bank_flights(
     return flights, chosen
 
 
+def step_with_table(p, v, w, dt, flight_step, params, table_contact, table_params, near_x, surface_z):
+    """Advance one free-flight step and resolve a descending in-bounds table crossing."""
+    new_p, new_v = flight_step(p, v, w, dt, params)
+    plane = surface_z + params.ball_radius
+    falling = (p[:, 2] >= plane) & (new_p[:, 2] < plane)
+    fraction = ((p[:, 2] - plane) / (p[:, 2] - new_p[:, 2]).clamp_min(1e-9)).clamp(0.0, 1.0)
+    at_table = torch.lerp(p, new_p, fraction[:, None])
+    at_table[:, 2] = plane
+    bounce = falling & (at_table[:, 0] >= near_x) & (at_table[:, 0] <= near_x + 2.74)
+    bounce &= at_table[:, 1].abs() <= 0.7625
+    v_minus = torch.lerp(v, new_v, fraction[:, None])
+    v_plus, w_plus = table_contact(v_minus, w, table_params)
+    rebound_p, rebound_v = flight_step(at_table, v_plus, w_plus, (dt * (1.0 - fraction))[:, None], params)
+    mask = bounce[:, None]
+    return (torch.where(mask, rebound_p, new_p), torch.where(mask, rebound_v, new_v),
+            torch.where(mask, w_plus, w), bounce, falling, at_table)
+
+
+def extend_bank_flights(
+    flights, bank: Path, rows, extension_s, table_offset, flight_step, params, table_contact, table_params,
+):
+    """Preserve every replay sample through nominal strike, then extend the ball from its bank state."""
+    dt = 0.001
+    with np.load(bank, allow_pickle=False) as archive:
+        v, w = (torch.as_tensor(archive[key][rows], dtype=torch.float64)
+                for key in ("incoming_velocity", "incoming_spin"))
+    p = torch.as_tensor(np.stack([xyz[-1] for _, xyz in flights]) + np.asarray(table_offset))
+    tail, spins = [], [w.numpy().copy()]
+    for _ in range(round(extension_s / dt)):
+        p, v, w, _, _, _ = step_with_table(
+            p, v, w, dt, flight_step, params, table_contact, table_params, table_offset[0], table_offset[2],
+        )
+        tail.append(p.numpy().copy())
+        spins.append(w.numpy().copy())
+    if not tail:
+        return flights, np.stack(spins, axis=1)
+    tail = np.stack(tail, axis=1) - np.asarray(table_offset)
+    delta_t = dt * np.arange(1, tail.shape[1] + 1)
+    return [(np.concatenate((t, t[-1] + delta_t)), np.concatenate((xyz, tail[i]), axis=0))
+            for i, (t, xyz) in enumerate(flights)], np.stack(spins, axis=1)
+
+
 @dataclass
 class ReplayBatch:
     times: torch.Tensor

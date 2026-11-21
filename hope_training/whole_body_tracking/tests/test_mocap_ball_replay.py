@@ -25,6 +25,14 @@ def load_module(name):
     return module
 
 
+def constant_velocity(p, v, w, dt, params):
+    return p + v * dt, v
+
+
+def elastic_table_contact(v, w, params):
+    return v * v.new_tensor([1, 1, -1]), -w
+
+
 replay = load_module("mocap_ball_replay")
 preparation = load_module("mocap_preparation")
 
@@ -67,11 +75,12 @@ class MocapReplayTests(unittest.TestCase):
                      incoming_spin=np.zeros((2, 3)))
             sha = hashlib.sha256(bank.read_bytes()).hexdigest()
 
-            def constant_velocity(p, v, w, dt, params):
-                return p + v * dt, v
-
+            params = SimpleNamespace(ball_radius=0.02)
             flights, rows = replay.reconstruct_bank_flights(
-                bank, sha, 1, 0, offset, constant_velocity, SimpleNamespace(ball_radius=0.02),
+                bank, sha, 1, 0, offset, constant_velocity, params,
+            )
+            extended, spins = replay.extend_bank_flights(
+                flights, bank, rows, 0.120, offset, constant_velocity, params, elastic_table_contact, None,
             )
         self.assertEqual(rows, [0, 1])
         for row, (time, xyz) in enumerate(flights):
@@ -79,6 +88,28 @@ class MocapReplayTests(unittest.TestCase):
             np.testing.assert_allclose(xyz[0] + offset, target[row] - time[-1] * velocity[row])
             self.assertGreater(xyz[0, 2], 0.025)
             self.assertLess(time[-1], 0.60)
+            extended_time, extended_pos = extended[row]
+            np.testing.assert_array_equal(extended_time[:len(time)], time)
+            np.testing.assert_array_equal(extended_pos[:len(xyz)], xyz)
+            self.assertEqual(len(extended_time) - len(time), 120)
+            self.assertAlmostEqual(extended_time[-1] - time[-1], 0.120)
+            np.testing.assert_allclose(extended_pos[-1] + offset, target[row] + 0.120 * velocity[row])
+        self.assertEqual(spins.shape, (2, 121, 3))
+
+    def test_table_step_rebounds_only_above_table_and_advances_remaining_time(self):
+        position = torch.tensor([[1., 0., 0.79], [1., 0.90, 0.79]])
+        velocity = torch.tensor([[2., 0., -2.], [2., 0., -2.]])
+        spin = torch.ones_like(velocity)
+        p, v, w, bounce, falling, impact = replay.step_with_table(
+            position, velocity, spin, 0.020, constant_velocity, SimpleNamespace(ball_radius=0.02),
+            elastic_table_contact, None, 0.5, 0.76,
+        )
+        self.assertEqual(falling.tolist(), [True, True])
+        self.assertEqual(bounce.tolist(), [True, False])
+        torch.testing.assert_close(impact[:, 0], torch.tensor([1.01, 1.01]))
+        torch.testing.assert_close(p[:, 2], torch.tensor([0.81, 0.75]))
+        torch.testing.assert_close(v[:, 2], torch.tensor([2., -2.]))
+        torch.testing.assert_close(w[:, 0], torch.tensor([-1., 1.]))
 
 
 class PreparationRewardTests(unittest.TestCase):

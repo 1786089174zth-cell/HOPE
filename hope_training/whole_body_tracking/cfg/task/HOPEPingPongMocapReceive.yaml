@@ -28,13 +28,14 @@ racket:
 build_contract:
   training_recipe_revision: mocap_receive_v1
   reward_revision: mocap_receive_preparation_v1
-  training_distribution_revision: mocap_receive_v1
+  training_distribution_revision: mocap_receive_post_strike_v2
 mocap_replay:
   # Reuse the original train.npz from StationaryRally. dev/test stay held out.
   rows_per_side: 16
   bank_seed: 0
   sensor_delay_s: 0.010
   max_age_s: 0.050
+  post_strike_extension_s: 0.120
   trial_log: null
   preparation:
     weight: 0.25
