@@ -47,7 +47,7 @@ class MotionOnPolicyRunner(OnPolicyRunner):
         # its passive columns before rsl_rl constructs the policy, so entropy optimizes the 29
         # active A3 channels while preserving the 31-D network/export shape.
         policy_cfg = train_cfg.get("policy", {})
-        if policy_cfg.get("class_name") == "BoundedStdActorCritic":
+        if policy_cfg.get("class_name") in {"BoundedStdActorCritic", "BoundedStdActorCriticRecurrent"}:
             action_term = env.unwrapped.action_manager.get_term("joint_pos")
             policy_cfg["entropy_action_transform"] = (
                 "tanh"

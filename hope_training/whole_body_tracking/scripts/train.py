@@ -263,6 +263,10 @@ def _apply_task_overrides(env_cfg, cfg, applied: list) -> None:
     if overrides:
         for dotted, value in OmegaConf.to_container(overrides, resolve=True).items():
             _set_dotted(env_cfg, str(dotted), value, applied, "overrides")
+    if task.get("mocap_replay") is not None:
+        from whole_body_tracking.tasks.tracking.mdp.mocap_receive import configure_mocap_receive
+
+        configure_mocap_receive(env_cfg, task.mocap_replay, _repo_root())
 
 
 def _run(cfg):
@@ -310,6 +314,12 @@ def _run(cfg):
 
     # 3) PPO runner cfg from cfg/algo/ppo.yaml.
     algo = OmegaConf.to_container(cfg.algo, resolve=True)
+    mocap_replay = cfg.task.get("mocap_replay") is not None
+    if mocap_replay:
+        if not algo["policy"].get("recurrent"):
+            raise ValueError("HOPEPingPongMocapReceive requires algo=ppo_mocap_receive_gru")
+        if cfg.checkpoint_path is not None or cfg.warm_start_actor_checkpoint is not None:
+            raise ValueError("HOPEPingPongMocapReceive currently requires a fresh policy")
     from whole_body_tracking.utils.balanced_hold_contract import validate_balanced_hold_algorithm
     from whole_body_tracking.utils.robust_ball_distribution import validate_training_contract
     validate_training_contract(OmegaConf.to_container(cfg.task, resolve=True), algo)
@@ -458,12 +468,12 @@ def _run(cfg):
         profile = cProfile.Profile()
         try:
             with profile:
-                runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
+                runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=not mocap_replay)
         finally:
             pathlib.Path(profile_path).parent.mkdir(parents=True, exist_ok=True)
             profile.dump_stats(profile_path)
     else:
-        runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
+        runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=not mocap_replay)
     env.close()
 
 

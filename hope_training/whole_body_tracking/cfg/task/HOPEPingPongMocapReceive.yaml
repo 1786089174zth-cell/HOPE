@@ -1,0 +1,39 @@
+defaults:
+  - HOPEPingPongStationaryRally
+  - _self_
+
+name: HitterPingPongMocapReceive
+experiment_name: agibot_a3_mocap_receive
+actor_obs_contract: mocap_ball_receive
+env:
+  num_envs: 32
+  episode_length_s: 2.5
+motion:
+  stand_start_prob: 1.0
+  stand_start_min_hold: 500
+  stand_start_x_range: [0.0, 0.0]
+  stand_start_yaw_range: [0.0, 0.0]
+  post_swing_start_prob: 0.0
+  interruptible_recovery_enabled: false
+racket:
+  venue_tuple_enabled: false
+  virtual_ball: false
+  physical_ball: false
+  physical_ball_impulse: false
+  ability_curriculum_mode: disabled
+build_contract:
+  training_recipe_revision: mocap_receive_v1
+  reward_revision: mocap_receive_preparation_v1
+  training_distribution_revision: mocap_receive_v1
+mocap_replay:
+  # Reuse the original train.npz from StationaryRally. dev/test stay held out.
+  rows_per_side: 16
+  bank_seed: 0
+  sensor_delay_s: 0.010
+  max_age_s: 0.050
+  preparation:
+    weight: 0.25
+    window_s: [0.10, 0.30]
+    reference_lead_s: 0.20
+    distance_scale_m: 0.15
+    max_tilt_deg: 20.0

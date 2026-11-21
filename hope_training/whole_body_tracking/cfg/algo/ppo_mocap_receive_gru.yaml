@@ -1,0 +1,16 @@
+defaults:
+  - ppo_balanced_hold
+  - _self_
+
+name: HitterMocapReceiveGRUPPO
+runner:
+  logger: tensorboard
+  max_iterations: 2
+policy:
+  recurrent: true
+  rnn_type: gru
+  rnn_hidden_dim: 110
+  rnn_num_layers: 1
+algorithm:
+  num_learning_epochs: 2
+  num_mini_batches: 4

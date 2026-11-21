@@ -237,12 +237,25 @@ HITTER_PURE_V15 = ActorObservationContract(
     ),
 )
 
+MOCAP_BALL_RECEIVE = ActorObservationContract(
+    name="mocap_ball_receive",
+    obs_mode="mocap_ball_receive",
+    total_dim=123,
+    terms=HITTER_PURE.terms[:-3] + (
+        ActorObservationTerm(
+            "ball_history", 20, "mocap_replay",
+            "four newest-first samples: table XYZ, sample age in seconds, validity",
+        ),
+    ),
+)
+
 CONTRACTS = {
     FULL.name: FULL,
     DEPLOY_PARITY.name: DEPLOY_PARITY,
     HITTER_FOOTWORK.name: HITTER_FOOTWORK,
     HITTER_PURE.name: HITTER_PURE,
     HITTER_PURE_V15.name: HITTER_PURE_V15,
+    MOCAP_BALL_RECEIVE.name: MOCAP_BALL_RECEIVE,
     FULL.obs_mode: FULL,
     DEPLOY_PARITY.obs_mode: DEPLOY_PARITY,
     HITTER_FOOTWORK.obs_mode: HITTER_FOOTWORK,
@@ -287,7 +300,7 @@ def total_policy_dim_from_env(env) -> int:
 def infer_actor_observation_contract(env) -> ActorObservationContract | None:
     layout = policy_layout_from_env(env)
     total_dim = total_policy_dim_from_env(env)
-    for contract in (FULL, DEPLOY_PARITY, HITTER_FOOTWORK, HITTER_PURE, HITTER_PURE_V15):
+    for contract in (FULL, DEPLOY_PARITY, HITTER_FOOTWORK, HITTER_PURE, HITTER_PURE_V15, MOCAP_BALL_RECEIVE):
         if layout == contract.layout and total_dim == contract.total_dim:
             return contract
     return None
