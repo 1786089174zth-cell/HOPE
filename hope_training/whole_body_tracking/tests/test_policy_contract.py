@@ -90,6 +90,17 @@ def test_task_yaml_declares_hitter_pure():
     assert int(task["build_contract"]["action_dim"]) == 31
 
 
+def test_mocap_receive_task_declares_ball_history_actor_dim():
+    import yaml
+
+    path = os.path.join(_ROOT, "cfg", "task", "HOPEPingPongMocapReceive.yaml")
+    with open(path, encoding="utf-8") as stream:
+        task = yaml.safe_load(stream)
+    contract = registry.resolve_actor_observation_contract(task["actor_obs_contract"])
+    assert contract.layout == _EXPECTED_LAYOUT[:-3] + (("ball_history", 20),)
+    assert task["build_contract"]["actor_observation_dim"] == contract.total_dim == 123
+
+
 def test_reference_package_matches_registry():
     sys.path.insert(0, _REFERENCE_DIR)
     try:
