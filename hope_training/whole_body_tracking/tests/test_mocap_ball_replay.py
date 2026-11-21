@@ -129,6 +129,62 @@ class MocapReplayTests(unittest.TestCase):
 
 
 class PaddleSweepTests(unittest.TestCase):
+    def test_sweep_matches_analytic_face_rim_and_near_miss_cases(self):
+        count = 128
+        rng = torch.Generator().manual_seed(19000)
+        unit = torch.rand(count, generator=rng)
+        azimuth = 2.0 * math.pi * torch.rand(count, generator=rng)
+        direction = torch.stack((azimuth.cos(), azimuth.sin()), dim=-1)
+        sign = torch.where(torch.arange(count) % 2 == 0, 1.0, -1.0)
+        incoming_z = 0.035 + 0.075 * torch.rand(count, generator=rng)
+        outgoing_z = 0.035 + 0.075 * torch.rand(count, generator=rng)
+        normal = torch.tensor([0., 0., 1.]).expand(count, -1)
+
+        def sweep(radius, stop_height):
+            xy = direction * radius[:, None]
+            start = torch.cat((xy, (sign * incoming_z)[:, None]), dim=-1)
+            stop = torch.cat((xy, (sign * stop_height)[:, None]), dim=-1)
+            return paddle.sweep_ball_against_disc(start, stop, normal, normal, 0.075, 0.020)
+
+        for radial_center in (0.074 * unit, 0.0751 + 0.01985 * unit):
+            hit, fraction, *_ = sweep(radial_center, -outgoing_z)
+            self.assertEqual(int(hit.sum()), count)
+            edge_offset = (radial_center - 0.075).clamp_min(0.0)
+            impact_z = (0.020**2 - edge_offset.square()).sqrt()
+            exact_fraction = (incoming_z - impact_z) / (incoming_z + outgoing_z)
+            torch.testing.assert_close(fraction, exact_fraction, atol=2e-4, rtol=0.0)
+
+        outside_rim, *_ = sweep(0.09505 + 0.020 * unit, -outgoing_z)
+        only_in_old_padding, *_ = sweep(0.074 * unit, 0.02005 + 0.0045 * unit)
+        self.assertFalse(outside_rim.any())
+        self.assertFalse(only_in_old_padding.any())
+
+    def test_rotating_disc_hits_known_crossings_and_rejects_clearance(self):
+        count = 128
+        rng = torch.Generator().manual_seed(7719)
+        unit = torch.rand(count, generator=rng)
+        half_angle = torch.deg2rad(1.0 + 11.0 * torch.rand(count, generator=rng))
+        zero = torch.zeros(count)
+        n0 = torch.stack((zero, -half_angle.sin(), half_angle.cos()), dim=-1)
+        n1 = torch.stack((zero, half_angle.sin(), half_angle.cos()), dim=-1)
+        signed_height = (0.035 + 0.050 * torch.rand(count, generator=rng))
+        signed_height *= torch.where(torch.arange(count) % 2 == 0, 1.0, -1.0)
+
+        # At t=0.5 the normal is +Z and the ball lies on the X axis. Its distance
+        # from the finite disc is exactly max(0, radius - 75 mm).
+        cases = (
+            (0.074 * unit, True),
+            (0.09495 + 0.00004 * unit, True),
+            (0.09505 + 0.010 * unit, False),
+        )
+        for radial_center, expected in cases:
+            start = torch.stack((radial_center, zero, signed_height), dim=-1)
+            stop = torch.stack((radial_center, zero, -signed_height), dim=-1)
+            hit, fraction, *_ = paddle.sweep_ball_against_disc(start, stop, n0, n1, 0.075, 0.020)
+            self.assertEqual(int(hit.sum()), count if expected else 0)
+            if expected:
+                self.assertTrue((fraction < 0.5).all())
+
     def test_sweep_catches_interframe_face_and_rim_only_at_ball_radius(self):
         start = torch.tensor([[0., 0., 0.04], [0.09, 0., 0.04], [0.096, 0., 0.04], [0., 0., 0.03]])
         end = torch.tensor([[0., 0., -0.04], [0.09, 0., -0.04], [0.096, 0., -0.04], [0., 0., 0.023]])
