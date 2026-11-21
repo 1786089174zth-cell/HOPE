@@ -5,9 +5,11 @@ import json
 import math
 from pathlib import Path
 
+import numpy as np
 import torch
 from isaaclab.managers import CommandTerm, CommandTermCfg, ObservationTermCfg, RewardTermCfg
 from isaaclab.utils import configclass
+from isaaclab.utils.math import quat_apply
 
 from .mocap_ball_replay import ReplayBatch, reconstruct_bank_flights
 from .mocap_preparation import advance_preparation_progress
@@ -133,19 +135,32 @@ class MocapReceiveCommand(CommandTerm):
 
     def _get_preparation_targets(self, racket):
         if self._preparation_targets is None:
-            motion = racket._motion().motion
+            command = racket._motion()
+            motion = command.motion
             if int(motion.num_segments) != 2:
                 raise ValueError("mocap preparation needs the original forehand and backhand clips")
+            uses_mount = racket._racket_mode != "body"
+            body = racket._wrist_body_index if uses_mount else racket._racket_body_index
             frames_early = round(self.cfg.preparation_reference_lead_s / self._env.step_dt)
             offsets = []
             for side in (0, 1):
                 strike, _, start, length = racket._strike_frame_for_clip(motion, side)
-                frame_range = dict(clip_start=start, clip_end=start + length - 1)
                 if strike - frames_early < start or frames_early < 1:
                     raise ValueError("preparation reference lead does not fit the motion clip")
-                ready = racket._ref_racket_pos_at(motion, strike - frames_early, **frame_range)
-                at_strike = racket._ref_racket_pos_at(motion, strike, **frame_range)
-                offsets.append(ready - at_strike)
+                frames = [strike - start - frames_early, strike - start]
+                # MotionLoader keeps only tracked bodies. Use the source clip's
+                # full articulation arrays to read the wrist or racket body.
+                with np.load(command.cfg.motion_file[side], allow_pickle=False) as clip:
+                    positions = clip["body_pos_w"]
+                    if positions.shape != (length, len(racket.robot.body_names), 3):
+                        raise ValueError("mocap preparation requires full articulation reference clips")
+                    centers = torch.as_tensor(positions[frames, body], dtype=torch.float32, device=self.device)
+                    if uses_mount:
+                        quat = torch.as_tensor(
+                            clip["body_quat_w"][frames, body], dtype=torch.float32, device=self.device,
+                        )
+                        centers = centers + quat_apply(quat, racket._mount_offset[:1].expand(2, -1))
+                offsets.append(centers[0] - centers[1])
             # reconstruct_bank_flights returns the chosen forehand rows before
             # the chosen backhand rows, with exactly rows_per_side of each.
             row_offsets = torch.stack(offsets).repeat_interleave(self.cfg.rows_per_side, dim=0)

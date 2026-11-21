@@ -10585,9 +10585,11 @@ class RacketTargetCommand(CommandTerm):
             self.metrics["adaptive_sigma_normal"][:] = self._adaptive_sigma_normal
         # With adaptation disabled the YAML can override the live std (e.g.
         # stationary v4 uses .22), while the unused adaptive state stays .20.
-        self.metrics["position_sigma_current"][:] = float(
-            self._env.reward_manager.get_term_cfg("racket_position").params["std"]
-        )
+        reward_manager = self._env.reward_manager
+        if "racket_position" in reward_manager.active_terms:
+            self.metrics["position_sigma_current"][:] = float(
+                reward_manager.get_term_cfg("racket_position").params["std"]
+            )
         # REVERSIBLE PRECISION/STABILITY CURRICULUM (2026-07-24): a normal-only one-way latch
         # enabled velocity weight 24 at iteration 147, long before position or recovery was learned.
         # Require BOTH clips to clear normal + exact-position gates, and require aggregate post-fall
