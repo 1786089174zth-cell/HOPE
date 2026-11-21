@@ -14,11 +14,12 @@ from isaaclab.utils.math import quat_apply
 from whole_body_tracking.tasks.table_tennis import geometry as table_geometry
 
 from .mocap_ball_replay import ReplayBatch, extend_bank_flights, reconstruct_bank_flights, step_with_table
+from .mocap_paddle_contact import sweep_ball_against_disc
 from .mocap_preparation import advance_preparation_progress
 from .physical_ball import (
-    blade_disc_contact, load_venue_table_params, net_plane_crossing, predict_table_contact, racket_impulse,
+    RACKET_CONTACT_RADIUS, load_venue_table_params, net_plane_crossing, predict_table_contact, racket_impulse,
 )
-from .virtual_ball import load_venue_params, orient_normal, rk4_step
+from .virtual_ball import load_venue_params, rk4_step
 
 
 class MocapReceiveCommand(CommandTerm):
@@ -48,9 +49,11 @@ class MocapReceiveCommand(CommandTerm):
         self._flight = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
         self._elapsed = torch.zeros(self.num_envs, device=self.device)
         self._delay = torch.zeros_like(self._elapsed)
-        self._prev_dn = torch.zeros_like(self._elapsed)
         self._prev_valid = torch.zeros_like(self._flight, dtype=torch.bool)
+        self._prev_blade = torch.zeros((self.num_envs, 3), device=self.device)
+        self._prev_blade_normal = torch.zeros_like(self._prev_blade)
         self._contacted = torch.zeros_like(self._prev_valid)
+        self._rim_contact = torch.zeros_like(self._prev_valid)
         self._return_active = torch.zeros_like(self._prev_valid)
         self._paddle_rebound = torch.zeros_like(self._prev_valid)
         self._table_bounces = torch.zeros_like(self._flight)
@@ -99,6 +102,7 @@ class MocapReceiveCommand(CommandTerm):
         self._elapsed[env_ids] = 0.0
         self._prev_valid[env_ids] = False
         self._contacted[env_ids] = False
+        self._rim_contact[env_ids] = False
         self._return_active[env_ids] = False
         self._paddle_rebound[env_ids] = False
         self._table_bounces[env_ids] = 0
@@ -134,11 +138,11 @@ class MocapReceiveCommand(CommandTerm):
             ids, flight, self._first_visible_s[ids], nominal, end, self._elapsed[ids],
             self._contacted[ids], prep, self._hit_offset_s[ids], self._outbound_vx[ids],
             self._paddle_rebound[ids], self._table_bounces[ids], self._opponent_bounces[ids],
-            self._net_blocked[ids],
+            self._net_blocked[ids], self._rim_contact[ids],
         ), dim=-1).cpu().tolist()
         with self._trial_log.open("a", encoding="utf-8") as stream:
             for (env, shot, seen, nominal_s, end_s, elapsed, hit, progress, hit_offset,
-                 outbound_vx, rebound, bounces, opponent_bounces, net_blocked) in columns:
+                 outbound_vx, rebound, bounces, opponent_bounces, net_blocked, rim) in columns:
                 visible = math.isfinite(seen)
                 if hit:
                     outcome = "hit"
@@ -153,6 +157,7 @@ class MocapReceiveCommand(CommandTerm):
                     "visible_lead_ms": 1000.0 * (nominal_s - seen) if visible else None,
                     "preparation_progress": progress, "elapsed_s": elapsed,
                     "hit_offset_ms": 1000.0 * hit_offset if hit else None,
+                    "contact_location": ("rim" if rim else "face") if hit else None,
                     "outbound_vx_m_s": outbound_vx if hit else None,
                     "paddle_rebound": bool(rebound), "table_bounces": int(bounces),
                     "opponent_table_bounces": int(opponent_bounces), "net_blocked": bool(net_blocked),
@@ -209,23 +214,27 @@ class MocapReceiveCommand(CommandTerm):
         self._elapsed += dt
         self._advance_returns(dt)
         now = self._elapsed - self._delay
+        end = self._replay_end_times[self._flight]
+        replay_now = torch.minimum(now.clamp_min(0.0), end)
         position, velocity, valid = self._replay.physical_sample(
-            self._flight, now, max_gap_s=self.cfg.max_gap_s,
+            self._flight, replay_now, max_gap_s=self.cfg.max_gap_s,
         )
         racket = self._env.command_manager.get_term("racket_target")
-        blade, _, blade_vel, _, normal = racket._racket_fk()
-        ball = position + self._table_offset + self._env.scene.env_origins
-        active = self._started & valid & ~self._contacted & (velocity[:, 0] < 0.0)
-        hit, signed_distance = blade_disc_contact(
-            ball, velocity, blade, blade_vel, normal, self._prev_dn, self._prev_valid & active,
+        blade_w, _, _, normal, _ = racket._racket_fk()
+        blade = blade_w - self._env.scene.env_origins
+        ball = position + self._table_offset
+        incoming = self._started & valid & ~self._contacted & (velocity[:, 0] < 0.0) & (now >= 0.0)
+        active = incoming & (now <= end)
+        candidates = incoming & self._prev_valid & (now - dt <= end)
+        hit = self._sweep_contacts(
+            candidates, dt, now, replay_now, ball, racket, blade, normal,
         )
-        hit &= active
-        self._start_returns(hit, now, ball, velocity, blade, blade_vel, normal)
         self._contacted |= hit
         self.hit_now |= hit
         self.metrics["contact"].add_(hit)
-        self._prev_dn.copy_(signed_distance)
-        self._prev_valid.copy_(active & ~hit)
+        self._prev_valid.copy_(self._started)
+        self._prev_blade.copy_(blade)
+        self._prev_blade_normal.copy_(normal)
         near_end = (position[:, 0] <= 0.40) & (position[:, 0] >= -0.30)
         separation_sq = (ball - blade).square().sum(dim=-1)
         self.approach.copy_(torch.where(
@@ -235,7 +244,7 @@ class MocapReceiveCommand(CommandTerm):
             ready = self._get_preparation_targets(racket)[self._flight] + self._env.scene.env_origins
             upright = -racket.robot.data.projected_gravity_b[:, 2] >= self._upright_min
             progress, best = advance_preparation_progress(
-                self._preparation_best, (blade - ready).square().sum(dim=-1),
+                self._preparation_best, (blade_w - ready).square().sum(dim=-1),
                 self._strike_times[self._flight] - now,
                 active & ~hit & (now >= self.cfg.sensor_delay_s), upright,
                 self.cfg.preparation_window_s, self.cfg.preparation_distance_scale_m,
@@ -244,33 +253,87 @@ class MocapReceiveCommand(CommandTerm):
             self.preparation_progress.add_(progress)
             self.metrics["preparation_progress"].add_(progress)
 
-    def _start_returns(self, hit, now, ball, velocity, blade, blade_vel, normal):
-        ids = hit.nonzero(as_tuple=True)[0]
+    def _sweep_contacts(self, candidates, dt, now, replay_now, ball, racket, blade, normal):
+        hit = torch.zeros_like(candidates)
+        ids = candidates.nonzero(as_tuple=True)[0]
         if ids.numel() == 0:
-            return
+            return hit
+
+        # Clip the interval to actual replay data, including fractional launch and final ticks.
+        previous_t = now[ids] - dt
+        start_t = previous_t.clamp_min(0.0)
+        stop_t = replay_now[ids]
+        start_pos, _, valid = self._replay.physical_sample(
+            self._flight[ids], start_t, max_gap_s=self.cfg.max_gap_s,
+        )
+        start_f = ((start_t - previous_t) / dt).clamp(0.0, 1.0)
+        stop_f = ((stop_t - previous_t) / dt).clamp(0.0, 1.0)
+        blade_start = torch.lerp(self._prev_blade[ids], blade[ids], start_f[:, None])
+        blade_stop = torch.lerp(self._prev_blade[ids], blade[ids], stop_f[:, None])
+        delta_start = start_pos + self._table_offset - blade_start
+        delta_stop = ball[ids] - blade_stop
+        motion = delta_stop - delta_start
+        closest_f = -(delta_start * motion).sum(dim=-1) / motion.square().sum(dim=-1).clamp_min(1e-12)
+        closest_center = delta_start + closest_f.clamp(0.0, 1.0)[:, None] * motion
+        reach = RACKET_CONTACT_RADIUS + self._ball_params.ball_radius + 1e-6
+        nearby = torch.linalg.vector_norm(closest_center, dim=-1) <= reach
+        near = (valid & nearby & (stop_t > start_t)).nonzero(as_tuple=True)[0]
+        if near.numel() == 0:
+            return hit
+
+        ids = ids[near]
+        normal_start = torch.lerp(self._prev_blade_normal[ids], normal[ids], start_f[near, None])
+        normal_stop = torch.lerp(self._prev_blade_normal[ids], normal[ids], stop_f[near, None])
+        touched, fraction, point, outward, face, rotation = sweep_ball_against_disc(
+            delta_start[near], delta_stop[near], normal_start, normal_stop,
+            RACKET_CONTACT_RADIUS, self._ball_params.ball_radius,
+        )
+        impact = touched.nonzero(as_tuple=True)[0]
+        if impact.numel() == 0:
+            return hit
+        ids, near = ids[impact], near[impact]
+        fraction = fraction[impact]
+        point, outward = point[impact], outward[impact]
+        time = torch.lerp(start_t[near], stop_t[near], fraction)
+        dt_left = (now[ids] - time).clamp_min(0.0)
+        blade_at_hit = torch.lerp(blade_start[near], blade_stop[near], fraction[:, None])
+        span = (stop_t[near] - start_t[near])[:, None]
+        blade_velocity = (blade_stop[near] - blade_start[near]) / span
+        ball_velocity = blade_velocity + motion[near] / span
+        link = racket._racket_body_index if racket._racket_mode == "body" else racket._wrist_body_index
+        # Use the same motion as the sweep. Twist about the face axis is invisible
+        # to disc geometry, so retain the actual link's twist for tangential speed.
+        face = face[impact]
+        angular_velocity = racket.robot.data.body_link_ang_vel_w[ids, link]
+        twist = (angular_velocity * face).sum(dim=-1, keepdim=True) * face
+        omega = rotation[impact] / span + twist
+        point_velocity = blade_velocity + torch.linalg.cross(omega, point)
+        self._rim_contact[ids] = torch.linalg.vector_norm(point, dim=-1) >= RACKET_CONTACT_RADIUS - 1e-6
+        self._start_returns(ids, time, blade_at_hit + point, ball_velocity, point_velocity, outward)
+        self._advance_returns(dt_left[:, None], ids)
+        hit[ids] = True
+        return hit
+
+    def _start_returns(self, ids, now, contact_point, velocity, blade_vel, normal):
         flight = self._flight[ids]
-        offset = now[ids] - self._strike_times[flight]
+        offset = now - self._strike_times[flight]
         spin_sample = (offset * 1000.0).floor().long().clamp(0, self._replay_spin.shape[1] - 1)
-        face = orient_normal(normal[ids], velocity[ids], blade_vel[ids])
         outbound, spin = racket_impulse(
-            velocity[ids], blade_vel[ids], face, self._replay_spin[flight, spin_sample], self._ball_params,
+            velocity, blade_vel, normal, self._replay_spin[flight, spin_sample], self._ball_params,
         )
-        # Keep the impact's tangential location, placing the center one radius off the face.
-        depth = ((ball[ids] - blade[ids]) * face).sum(dim=-1, keepdim=True)
-        self._return_pos[ids] = (
-            ball[ids] + (self._ball_params.ball_radius - depth) * face - self._env.scene.env_origins[ids]
-        )
+        self._return_pos[ids] = contact_point + self._ball_params.ball_radius * normal
         self._return_vel[ids] = outbound
         self._return_spin[ids] = spin
-        incoming_normal_speed = ((velocity[ids] - blade_vel[ids]) * face).sum(dim=-1)
-        outgoing_normal_speed = ((outbound - blade_vel[ids]) * face).sum(dim=-1)
+        incoming_normal_speed = ((velocity - blade_vel) * normal).sum(dim=-1)
+        outgoing_normal_speed = ((outbound - blade_vel) * normal).sum(dim=-1)
         self._paddle_rebound[ids] = (incoming_normal_speed < 0.0) & (outgoing_normal_speed > 0.0)
         self._hit_offset_s[ids] = offset
         self._outbound_vx[ids] = outbound[:, 0]
         self._return_active[ids] = True
 
-    def _advance_returns(self, dt):
-        ids = self._return_active.nonzero(as_tuple=True)[0]
+    def _advance_returns(self, dt, ids=None):
+        if ids is None:
+            ids = self._return_active.nonzero(as_tuple=True)[0]
         if ids.numel() == 0:
             return
         near_x, _, surface_z = self.cfg.table_offset

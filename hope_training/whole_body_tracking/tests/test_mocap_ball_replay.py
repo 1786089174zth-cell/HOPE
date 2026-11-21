@@ -34,6 +34,7 @@ def elastic_table_contact(v, w, params):
 
 
 replay = load_module("mocap_ball_replay")
+paddle = load_module("mocap_paddle_contact")
 preparation = load_module("mocap_preparation")
 
 
@@ -63,6 +64,12 @@ class MocapReplayTests(unittest.TestCase):
         torch.testing.assert_close(position[0], torch.tensor([1.95, -0.7, 0.2]))
         torch.testing.assert_close(velocity[0], torch.tensor([-5., 0., 0.]))
         self.assertFalse(position[1:].any().item())
+
+    def test_contact_path_includes_padded_row_endpoint_only(self):
+        _, _, valid = self.batch.physical_sample(
+            torch.tensor([1, 1]), torch.tensor([0.04, 0.041]), max_gap_s=0.025,
+        )
+        self.assertEqual(valid.tolist(), [True, False])
 
     def test_bank_replay_ends_at_original_strike_state(self):
         offset = (0.5, 0.7625, 0.76)
@@ -110,6 +117,39 @@ class MocapReplayTests(unittest.TestCase):
         torch.testing.assert_close(p[:, 2], torch.tensor([0.81, 0.75]))
         torch.testing.assert_close(v[:, 2], torch.tensor([2., -2.]))
         torch.testing.assert_close(w[:, 0], torch.tensor([-1., 1.]))
+
+    def test_table_step_accepts_a_partial_physics_step_per_ball(self):
+        p = torch.tensor([[1., 0., 1.], [1., 0., 1.]])
+        v = torch.tensor([[2., 0., 0.], [2., 0., 0.]])
+        new_p, *_ = replay.step_with_table(
+            p, v, torch.zeros_like(v), torch.tensor([[0.002], [0.004]]), constant_velocity,
+            SimpleNamespace(ball_radius=0.02), elastic_table_contact, None, 0.5, 0.76,
+        )
+        torch.testing.assert_close(new_p[:, 0], torch.tensor([1.004, 1.008]))
+
+
+class PaddleSweepTests(unittest.TestCase):
+    def test_sweep_catches_interframe_face_and_rim_only_at_ball_radius(self):
+        start = torch.tensor([[0., 0., 0.04], [0.09, 0., 0.04], [0.096, 0., 0.04], [0., 0., 0.03]])
+        end = torch.tensor([[0., 0., -0.04], [0.09, 0., -0.04], [0.096, 0., -0.04], [0., 0., 0.023]])
+        normal = torch.tensor([0., 0., 1.]).expand_as(start)
+        hit, t, point, outward, *_ = paddle.sweep_ball_against_disc(start, end, normal, normal, 0.075, 0.02)
+        self.assertEqual(hit.tolist(), [True, True, False, False])
+        expected_rim_height = math.sqrt(0.02**2 - 0.015**2)
+        torch.testing.assert_close(t[:2], torch.tensor([0.25, (0.04 - expected_rim_height) / 0.08]), atol=3e-5, rtol=0)
+        torch.testing.assert_close(point[:2, 0], torch.tensor([0., 0.075]))
+        torch.testing.assert_close(outward[1], torch.tensor([0.75, 0., expected_rim_height / 0.02]), atol=1e-4, rtol=0)
+
+    def test_sweep_handles_rotation_and_rejects_separating_overlap(self):
+        start = torch.tensor([[0., 0.06, 0.06], [0., 0., 0.015]])
+        end = torch.tensor([[0., 0.06, 0.06], [0., 0., 0.04]])
+        n0 = torch.tensor([[0., 0., 1.], [0., 0., 1.]])
+        n1 = torch.tensor([[0., -1., 0.], [0., 0., 1.]])
+        hit, t, _, normal, *_ = paddle.sweep_ball_against_disc(start, end, n0, n1, 0.075, 0.02)
+        self.assertEqual(hit.tolist(), [True, False])
+        self.assertGreater(t[0].item(), 0.0)
+        self.assertLess(t[0].item(), 0.5)
+        torch.testing.assert_close(torch.linalg.vector_norm(normal[0], dim=-1), torch.tensor(1.0))
 
 
 class PreparationRewardTests(unittest.TestCase):

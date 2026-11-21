@@ -80,7 +80,7 @@ def step_with_table(p, v, w, dt, flight_step, params, table_contact, table_param
     bounce &= at_table[:, 1].abs() <= 0.7625
     v_minus = torch.lerp(v, new_v, fraction[:, None])
     v_plus, w_plus = table_contact(v_minus, w, table_params)
-    rebound_p, rebound_v = flight_step(at_table, v_plus, w_plus, (dt * (1.0 - fraction))[:, None], params)
+    rebound_p, rebound_v = flight_step(at_table, v_plus, w_plus, dt * (1.0 - fraction[:, None]), params)
     mask = bounce[:, None]
     return (torch.where(mask, rebound_p, new_p), torch.where(mask, rebound_v, new_v),
             torch.where(mask, w_plus, w), bounce, falling, at_table)
@@ -154,6 +154,9 @@ class ReplayBatch:
         times = self.times[flight]
         idx = torch.searchsorted(times, now[:, None].contiguous(), right=True).squeeze(1)
         hi = idx.clamp(1, times.shape[1] - 1)
+        # At the exact final sample of a padded row, use the interval ending there.
+        padded = torch.isinf(times.gather(1, hi[:, None]).squeeze(1))
+        hi = (hi - padded.long()).clamp_min(1)
         lo = hi - 1
         t0, t1 = times.gather(1, lo[:, None]).squeeze(1), times.gather(1, hi[:, None]).squeeze(1)
         interval = t1 - t0
