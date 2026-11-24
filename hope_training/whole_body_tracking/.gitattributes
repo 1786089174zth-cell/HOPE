@@ -19,3 +19,6 @@
 
 # Ship the selected question bank as ordinary Git binary blobs.
 /assets/stationary_reach_v4_ppq004_generalization_20261022/*.npz -text -filter -diff -merge
+
+# SuperMimic's default physical tuple bank exceeds GitHub's regular file limit.
+assets/wide_stroke_v26_urdf2_plane058_20261110/physical_tuple_bank.npz filter=lfs diff=lfs merge=lfs -text

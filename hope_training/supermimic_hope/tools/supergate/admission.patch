@@ -1,0 +1,21 @@
+--- a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp
++++ b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp
+@@ -4973,12 +4973,16 @@
+           ? Vec2(base_pos[0], base_pos[1]) : station_session_origin_w_;
+       const Vec2 relative_target = Vec2(pos_w[0], pos_w[1]) - support_reference;
+       constexpr double kFixedTargetToleranceM = 0.030;
+-      const auto& pos_box = onnx_.hp_pos_boxes()[eng_clip];
++      const auto& pos_box = onnx_.hp_pos_support_boxes()[eng_clip];
+       const bool x_supported = onnx_.is_fixed_home_contract()
+           ? (relative_target[0] >= pos_box[0] && relative_target[0] <= pos_box[1])
+           : std::fabs(relative_target[0] - reach_offset_clip_[eng_clip][0]) <= kFixedTargetToleranceM;
+       const double y_margin = onnx_.is_fixed_home_contract() ? 0. : kFixedTargetToleranceM;
+-      const auto effective_y = EffectiveLateralSupport(cfg_.empirical_lateral_support, eng_clip, {hp_y_band_[eng_clip][0], hp_y_band_[eng_clip][1]});
++      // The qualified envelope, when exported, is the admission band; otherwise the declared one.
++      const std::array<double, 2> trained_y = onnx_.has_qualified_position_support()
++          ? std::array<double, 2>{pos_box[2], pos_box[3]}
++          : std::array<double, 2>{hp_y_band_[eng_clip][0], hp_y_band_[eng_clip][1]};
++      const auto effective_y = EffectiveLateralSupport(cfg_.empirical_lateral_support, eng_clip, trained_y);
+       const bool y_supported =
+           relative_target[1] >= effective_y[0] - y_margin &&
+           relative_target[1] <= effective_y[1] + y_margin;

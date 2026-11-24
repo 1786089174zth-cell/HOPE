@@ -1,0 +1,333 @@
+{
+  "baseline_commit": "a60fb85a75fb2fdac869b81c9c1e6f038d11c974",
+  "probe": {
+    "status": "PROBE_PASS",
+    "optimizer_updates": 0,
+    "steps": 256,
+    "environments": 32,
+    "resets": 107,
+    "backend": "mujoco_warp",
+    "mean_step_seconds": 0.06210542579610061,
+    "actor_dim": 110,
+    "critic_dim": 328,
+    "explicit_resets": 2,
+    "observed_families": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "snapshot_checks": [
+      {
+        "cpu_body_position_max_error_m": 2.518814602447961e-07,
+        "cpu_body_com_velocity_max_error_mps": 7.832055963774565e-07,
+        "root_com_velocity_write_max_error": 1.4901161193847656e-08
+      },
+      {
+        "cpu_body_position_max_error_m": 2.938468217639212e-07,
+        "cpu_body_com_velocity_max_error_mps": 7.521744331828728e-07,
+        "root_com_velocity_write_max_error": 0.0
+      }
+    ]
+  },
+  "final_update": {
+    "status": "TRAINING_LOOP_COMPLETED",
+    "iterations": 8,
+    "sim_vector_steps": 52,
+    "actor_updates": 7,
+    "formal_policy_evaluation": "NOT_RUN"
+  },
+  "unit_regression_tests_passed": 24,
+  "source_sha256": {
+    "hope_training/whole_body_tracking/scripts/train_supermimic.py": "a969533db4308ff8b8afbd7557b023f7356b31d37216085117ae755975209f0a",
+    "hope_training/whole_body_tracking/cfg/supermimic_train.yaml": "1cee4689082660acc0da8988adf60f20c0fe193830112b5c78a1a6b08184e87f",
+    "hope_training/supermimic_hope/supermimic_hope/__init__.py": "cc3f44338a0c3452ee47fad81a227569ebdce54dc8d695ee3f5d4b0ea66c77e1",
+    "hope_training/supermimic_hope/supermimic_hope/a3.py": "751f060c5527697262fbd21cdebb5d7e83c3447c01d0fee842d23ff81d4ab953",
+    "hope_training/supermimic_hope/supermimic_hope/environment.py": "7eb1c366349f6e15dc8352bda1489ec4a85beee5faa4c78dd72a211678bcff06",
+    "hope_training/supermimic_hope/supermimic_hope/learning.py": "b13c23dfde6563ac3b43db630b885ce3a8bdfd4f4e609481465be0e4f9cbc96f",
+    "hope_training/supermimic_hope/supermimic_hope/runner.py": "2993154d142680c6a71fbdb57e208a714f9ac2b53674ceec07943243cfedebb1",
+    "hope_training/supermimic_hope/supermimic_hope/trainer.py": "a3cb355829eb47bb2601cb80edf8b5d0fdcf54161bb8eb149be923ca272e0cf0",
+    "hope_training/supermimic_hope/supermimic_hope/warp_backend.py": "8963ccb0a7083b22914a1bb0b34192836d1e998448b540d78555cbfe7fe21d69"
+  },
+  "benchmarks": {
+    "default_update_smoke_01": {
+      "timed_iterations": 7,
+      "exclude_iteration_zero": true,
+      "means": {
+        "collection_seconds": 0.4344031152858016,
+        "learning_seconds": 0.07828664714283409,
+        "iteration_seconds": 0.5126897624286357
+      },
+      "evidence_dir": "analysis/supermimic_motion_quality_20261024/default_update_smoke_01"
+    },
+    "default_update_smoke_02": {
+      "timed_iterations": 7,
+      "exclude_iteration_zero": true,
+      "means": {
+        "collection_seconds": 0.296250967999835,
+        "learning_seconds": 0.07658775357179236,
+        "iteration_seconds": 0.3728387215716274
+      },
+      "evidence_dir": "analysis/supermimic_motion_quality_20261024/default_update_smoke_02"
+    },
+    "default_update_final": {
+      "timed_iterations": 7,
+      "exclude_iteration_zero": true,
+      "means": {
+        "collection_seconds": 0.2945791924285004,
+        "learning_seconds": 0.07887238999995004,
+        "iteration_seconds": 0.37345158242845045
+      },
+      "evidence_dir": "analysis/supermimic_motion_quality_20261024/default_update_final"
+    },
+    "isaac_reference_01": {
+      "timed_iterations": 7,
+      "exclude_iteration_zero": true,
+      "means": {
+        "collection_seconds": 0.2800216569994518,
+        "learning_seconds": 0.07659289714320039,
+        "iteration_seconds": 0.3566145541426522
+      },
+      "evidence_dir": "analysis/supermimic_motion_quality_20261024/isaac_reference_01"
+    }
+  },
+  "supplied_policy_audit": {
+    "onnx_sha256": "dbcb102a867c209cda962ba6a6ffda2ee1c026c3bdf39163df7e227508bb13bf",
+    "run": "2026-10-20_01-55-32_rally_v23_wide_right_scratch_16k",
+    "checkpoint_sha256": "80cc3ffb528ca456dfb54ddc0869a96e11ec35c6800aebcf2c7712efd3e476e8",
+    "onnx_torch_parity_max_abs": 3.4332275390625e-05,
+    "scope": "synthetic fixed supplied HOLD, fixed previous action, paired sensor perturbations; no closed-loop or motor-current proof",
+    "embedded_action_config": {
+      "actual_q_hard_audit_mode": "telemetry",
+      "actual_q_hard_tolerance_rad": 0.002,
+      "contract": "v11_affine_safe_qdes_v1",
+      "qdes_delay_max_steps": 1,
+      "qdes_delay_min_steps": 0,
+      "qdes_delay_nominal_fraction": 0.5
+    },
+    "results": {
+      "mocap_1mm": {
+        "active_joint_rms_mrad": 4.151887893676758,
+        "worst_joint": "right_ankle_pitch_joint",
+        "worst_joint_rms_mrad": 16.680561065673828,
+        "equivalent_kp_delta_rms_nm": 0.8340280652046204
+      },
+      "joint_pos_001_uniform": {
+        "active_joint_rms_mrad": 13.423316955566406,
+        "worst_joint": "waist_roll_joint",
+        "worst_joint_rms_mrad": 38.489646911621094,
+        "equivalent_kp_delta_rms_nm": 1.9244824647903442
+      },
+      "joint_vel_05_uniform": {
+        "active_joint_rms_mrad": 32.30679702758789,
+        "worst_joint": "waist_roll_joint",
+        "worst_joint_rms_mrad": 69.16190338134766,
+        "equivalent_kp_delta_rms_nm": 3.458095073699951
+      },
+      "gyro_02_uniform": {
+        "active_joint_rms_mrad": 14.348203659057617,
+        "worst_joint": "right_ankle_pitch_joint",
+        "worst_joint_rms_mrad": 33.45403289794922,
+        "equivalent_kp_delta_rms_nm": 1.6727017164230347
+      }
+    }
+  },
+  "policy_convergence": "NOT_PROVEN",
+  "hardware_noise_fixed": "NOT_PROVEN",
+  "final_physics": {
+    "source_xml": "/home/dongc1/workspace/Hope_v11/a3_deploy/A3_MuJoCo_Sim/aimrt_mujoco_sim/src/models/bin/cfg/model/a3_pingpong/a3_pingpong.xml",
+    "source_sha256": "4887b5301915830a298bee781c897da9448d45cf41ac91da6ce7440a7c3bbd22",
+    "timestep": 0.005,
+    "integrator": "implicitfast",
+    "nq": 38,
+    "nv": 37,
+    "nu": 31,
+    "ngeom": 82,
+    "nbody": 33,
+    "mass_kg": 58.257272310000005,
+    "armature": [
+      0.06646569891,
+      0.06646569891,
+      0.06646569891,
+      0.06646569891,
+      0.06646569891,
+      0.01462087613,
+      0.06646569891,
+      0.06646569891,
+      0.08820859156,
+      0.1203404,
+      0.1203404,
+      0.0008100893338,
+      0.01208336871,
+      0.01208336871,
+      0.06444060531,
+      0.06444060531,
+      0.0008100893338,
+      0.01208336871,
+      0.01208336871,
+      0.02012630058,
+      0.02012630058,
+      0.004967351303,
+      0.004967351303,
+      0.004967351303,
+      0.004967351303,
+      0.004967351303,
+      0.004967351303,
+      0.0008100893338,
+      0.0008100893338,
+      0.0008100893338,
+      0.0008100893338
+    ],
+    "passive_damping": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.5,
+      1.0,
+      1.0,
+      0.8,
+      2.0,
+      2.0,
+      1.0,
+      1.5,
+      1.5,
+      2.0,
+      2.0,
+      1.0,
+      1.5,
+      1.5,
+      2.0,
+      2.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "frictionloss": [
+      1.1971,
+      1.1971,
+      1.1971,
+      1.1971,
+      1.1971,
+      0.69223,
+      1.1971,
+      1.1971,
+      1.7,
+      2.4276,
+      2.4276,
+      0.1,
+      0.6293,
+      0.6293,
+      1.4,
+      1.4,
+      0.1,
+      0.6293,
+      0.6293,
+      0.778,
+      0.778,
+      0.41197,
+      0.41197,
+      0.41197,
+      0.41197,
+      0.41197,
+      0.41197,
+      0.1,
+      0.1,
+      0.1,
+      0.1
+    ],
+    "kp": [
+      80.0,
+      80.0,
+      85.0,
+      120.0,
+      120.0,
+      50.0,
+      80.0,
+      80.0,
+      50.0,
+      250.0,
+      250.0,
+      40.0,
+      40.0,
+      40.0,
+      50.0,
+      50.0,
+      40.0,
+      40.0,
+      40.0,
+      50.0,
+      50.0,
+      30.0,
+      30.0,
+      30.0,
+      30.0,
+      30.0,
+      30.0,
+      20.0,
+      20.0,
+      20.0,
+      20.0
+    ],
+    "kd": [
+      3.0,
+      3.0,
+      3.0,
+      4.0,
+      4.0,
+      2.0,
+      3.0,
+      3.0,
+      2.0,
+      8.0,
+      8.0,
+      2.0,
+      3.0,
+      3.0,
+      2.0,
+      2.0,
+      2.0,
+      3.0,
+      3.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+    ],
+    "isaac_mjcf_initial_fk_max_error_m": 2.9967650844175964e-06,
+    "startup_mass_range_kg": [
+      54.52403259277344,
+      63.158782958984375
+    ],
+    "inertia_off_diagonal_max": 3.421519068069756e-09,
+    "friction_source": "resolved per-body dynamic friction; MuJoCo max combine with floor zero",
+    "dynamic_friction_range": [
+      0.304619163274765,
+      1.1772360801696777
+    ],
+    "contact_difference": "MuJoCo solver/hulls; one Coulomb coefficient instead of separate static/dynamic friction; not PhysX parity",
+    "backend": "mujoco_warp",
+    "task_managers": "original_HOPE",
+    "isaac_bootstrap_only": true,
+    "captured": true,
+    "drive_damping": "resolved Isaac total, passive MuJoCo damping zero",
+    "drive_effort": "resolved Isaac joint_effort_limits",
+    "inertia_source": "resolved PhysX full inertia and principal frame"
+  }
+}

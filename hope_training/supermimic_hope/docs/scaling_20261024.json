@@ -1,0 +1,78 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "gpu_total_mib": 12227,
+  "measurements": {
+    "scale_2048_b1024": {
+      "num_envs": 2048,
+      "batch_size": 1024,
+      "timed_iterations": 7,
+      "completion": {
+        "status": "TRAINING_LOOP_COMPLETED",
+        "iterations": 8,
+        "sim_vector_steps": 52,
+        "actor_updates": 7,
+        "formal_policy_evaluation": "NOT_RUN"
+      },
+      "mean_seconds": {
+        "collection_seconds": 0.317895244571056,
+        "learning_seconds": 0.10682444300021286,
+        "iteration_seconds": 0.4247196875712689
+      },
+      "sampled_device_memory_peak_mib": 5686,
+      "gpu_memory_sampling_includes_bootstrap": false,
+      "real_transitions_per_timed_second": 12399.43866129827,
+      "evidence_directory": "analysis/supermimic_motion_quality_20261024/scale_2048_b1024"
+    },
+    "scale_4096_b2048": {
+      "num_envs": 4096,
+      "batch_size": 2048,
+      "timed_iterations": 7,
+      "completion": {
+        "status": "TRAINING_LOOP_COMPLETED",
+        "iterations": 8,
+        "sim_vector_steps": 52,
+        "actor_updates": 7,
+        "formal_policy_evaluation": "NOT_RUN"
+      },
+      "mean_seconds": {
+        "collection_seconds": 0.36882534800003797,
+        "learning_seconds": 0.17823965742848355,
+        "iteration_seconds": 0.5470650054285215
+      },
+      "sampled_device_memory_peak_mib": 8216,
+      "gpu_memory_sampling_includes_bootstrap": true,
+      "real_transitions_per_timed_second": 19252.869995442605,
+      "evidence_directory": "analysis/supermimic_motion_quality_20261024/scale_4096_b2048"
+    },
+    "scale_6144_b2048": {
+      "num_envs": 6144,
+      "batch_size": 2048,
+      "timed_iterations": 7,
+      "completion": {
+        "status": "TRAINING_LOOP_COMPLETED",
+        "iterations": 8,
+        "sim_vector_steps": 52,
+        "actor_updates": 7,
+        "formal_policy_evaluation": "NOT_RUN"
+      },
+      "mean_seconds": {
+        "collection_seconds": 0.42542145257123465,
+        "learning_seconds": 0.18549903885728522,
+        "iteration_seconds": 0.6109204914285199
+      },
+      "sampled_device_memory_peak_mib": 10262,
+      "gpu_memory_sampling_includes_bootstrap": true,
+      "real_transitions_per_timed_second": 25860.741887892087,
+      "evidence_directory": "analysis/supermimic_motion_quality_20261024/scale_6144_b2048"
+    }
+  },
+  "timing_scope": "CUDA synchronized collection plus learning, excludes iteration 0, bootstrap, warmup, logging and checkpoint I/O",
+  "gpu_memory_scope": "whole-device nvidia-smi samples at 0.5 s interval; observed peak, not exact maximum",
+  "new_defaults": {
+    "num_envs": 6144,
+    "batch_size": 2048
+  },
+  "formal_training_started": false,
+  "convergence_improvement": "NOT_PROVEN",
+  "default_config_sha256": "9aaffa011d8fa6f7d0aaa0ff5b35b10f1e2ccfb23d351989e3d13bc96bee986e"
+}

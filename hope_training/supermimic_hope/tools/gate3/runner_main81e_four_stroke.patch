@@ -1,0 +1,190 @@
+--- a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_onnx_policy.hpp
++++ b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_onnx_policy.hpp
+@@ -1702,6 +1702,29 @@
+       }
+     };
+     if (!hp_pos_s.empty()) parse_boxes(hp_pos_s, hp_pos_boxes_);
++    // Four-stroke exports: the qualified stroke-pool envelope is the admission box (the declared
++    // box stays the HOLD/idle geometry), and the old ball's tail stays visible until the next ball.
++    const std::string support_contract = LookupMetaOptional(md, alloc, "hitter_pure_position_support_contract");
++    const std::string support_boxes = LookupMetaOptional(md, alloc, "hitter_pure_pos_support_per_clip");
++    if (!support_contract.empty() || !support_boxes.empty()) {
++      if (support_contract != "qualified_stroke_pool_envelope_v1" || !is_fixed_home_contract())
++        throw std::runtime_error("unsupported qualified position envelope contract");
++      parse_boxes(support_boxes, hp_pos_support_boxes_);
++      if (hp_pos_support_boxes_.size() != 2)
++        throw std::runtime_error("qualified support requires two FH/BH boxes");
++      for (const auto& box : hp_pos_support_boxes_) {
++        for (double value : box)
++          if (!std::isfinite(value)) throw std::runtime_error("non-finite qualified support");
++        for (int axis = 0; axis < 6; axis += 2)
++          if (box[axis] > box[axis + 1]) throw std::runtime_error("reversed qualified support");
++      }
++    }
++    const auto recovery_contract = LookupMetaOptional(md, alloc, "hitter_pingpong_recovery_reference_contract");
++    if (!recovery_contract.empty() && recovery_contract != "old_ball_tail_until_arrival_v1")
++      throw std::runtime_error("Unknown natural recovery reference contract");
++    continue_recovery_reference_ = recovery_contract == "old_ball_tail_until_arrival_v1";
++    if (continue_recovery_reference_ && !is_fixed_home_contract())
++      throw std::runtime_error("Natural recovery requires fixed home");
+     if (!hp_vel_s.empty()) parse_boxes(hp_vel_s, hp_vel_boxes_);
+     if (!hp_vel_core_s.empty()) parse_boxes(hp_vel_core_s, hp_vel_core_boxes_);
+     if (!hp_vel_planner_s.empty()) parse_boxes(hp_vel_planner_s, hp_vel_planner_boxes_);
+@@ -1822,7 +1845,11 @@
+           LookupMetaOptional(md, alloc, "hitter_pure_passive_head") != "head_yaw_joint,head_pitch_joint" ||
+           last_action_head_mode_ != "zero" || !uses_authoritative_mocap_pose() ||
+           LookupMetaOptional(md, alloc, "hitter_pingpong_rally_end_contract") != "ball_clock_followthrough_v1" ||
+-          LookupMetaOptional(md, alloc, "hitter_pure_hold_pose_contract") != "actual_full_body_B32_5_K20_complete_v2" ||
++          // Two-clip fixed HOME uses the B32 HOLD; the four-stroke task holds the first frame of
++          // its stand-backhand clip and must also carry the natural recovery tail it was trained with.
++          (LookupMetaOptional(md, alloc, "hitter_pure_hold_pose_contract") != "actual_full_body_B32_5_K20_complete_v2" &&
++           (LookupMetaOptional(md, alloc, "hitter_pure_hold_pose_contract") != "stand_backhand_first_frame_v15" ||
++            !continue_recovery_reference_)) ||
+           LookupMetaOptional(md, alloc, "hitter_pure_hold_reference_sha256").size() != 64)
+         throw std::runtime_error("fixed session HOME requires continuous v3/rally_final_v2, "
+             "zero XY station range, original HOLD and direct ball-clock contracts");
+@@ -2748,6 +2775,13 @@
+   // {x_lo, x_hi, y_lo, y_hi, z_lo, z_hi} — pos boxes station-relative x/y + absolute z.
+   bool has_hitter_pure_boxes() const { return !hp_pos_boxes_.empty(); }
+   const std::vector<std::array<double, 6>>& hp_pos_boxes() const { return hp_pos_boxes_; }
++  // Admission box of a planner target: the qualified envelope when the export carries one.
++  const std::vector<std::array<double, 6>>& hp_pos_support_boxes() const {
++    return hp_pos_support_boxes_.empty() ? hp_pos_boxes_ : hp_pos_support_boxes_;
++  }
++  bool has_qualified_position_support() const { return !hp_pos_support_boxes_.empty(); }
++  // After the follow-through the old ball's target and clock stay visible until the next ball.
++  bool continue_recovery_reference() const { return continue_recovery_reference_; }
+   const std::vector<std::array<double, 6>>& hp_vel_boxes() const { return hp_vel_boxes_; }
+   const std::vector<std::array<double, 6>>& hp_vel_core_boxes() const {
+     return hp_vel_core_boxes_;
+@@ -3681,6 +3715,8 @@
+   std::vector<double> clip_seg_lengths_, clip_strike_phases_;  // empty on legacy exports
+   std::vector<Vec2> reach_offsets_;  // per-clip ref base->racket reach; empty on old exports
+   std::vector<std::array<double, 6>> hp_pos_boxes_, hp_vel_boxes_;  // hitter_pure geometry
++  std::vector<std::array<double, 6>> hp_pos_support_boxes_;  // admission only; never HOLD geometry
++  bool continue_recovery_reference_ = false;
+   std::vector<std::array<double, 6>> hp_vel_core_boxes_, hp_vel_planner_boxes_;
+   double hp_vel_planner_mix_prob_ = 0.0;
+   int hp_vel_range_ramp_steps_ = 0;
+--- a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp
++++ b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp
+@@ -1270,7 +1270,7 @@
+   // Runtime swing level: 0 = hold wind-up (quasi-stand), 1 = periodic forehand.
+   // Any EXTERNAL level change (keyboard, safety guard) cancels a pending swing-rest
+   // auto re-arm — a guard trip must never re-enter the swing on its own.
+-  void set_level(int lvl) { rest_rearm_armed_.store(false); level_.store(lvl); }
++  void set_level(int lvl) { rest_rearm_armed_.store(false); natural_recovery_active_.store(false); level_.store(lvl); }
+   int level() const { return level_.load(); }
+ 
+   // Live swing-speed tuning (real-time stretch; <1.0 slower). Clamped to a sane range.
+@@ -1290,6 +1290,7 @@
+   // QUEUED and applied at the next safe boundary (level 0, or the next windup start
+   // of the periodic/single-swing clock) in ComputeCommand.
+   void set_swing_dir(int d) {
++    if (level_.load() == 0) natural_recovery_active_.store(false);
+     const int want = d >= 0 ? 1 : -1;
+     if (level_.load() == 1 && swing_dir_.load() != want) {
+       pending_swing_dir_.store(want);
+@@ -1378,6 +1379,7 @@
+       planner_current_producer_epoch_ = 0;
+       planner_frozen_producer_epoch_ = 0;
+       planner_frozen_flight_id_ = 0;
++      natural_recovery_active_.store(false);
+       planner_frozen_revision_id_ = 0;
+       planner_schema22_cold_coverage_reported_producer_epoch_ = 0;
+       planner_schema22_cold_coverage_reported_flight_id_ = 0;
+@@ -1473,7 +1475,7 @@
+     const std::uint64_t origin = swing_clock_origin_.load();
+     const double t = planner_swing_elapsed_s(
+         tick_idx, origin, cfg_.dt, swing_speed_.load());
+-    if (level_.load() == 0) {
++    if (level_.load() == 0 && !natural_recovery_active_.load()) {
+       // New HitterPingPong policies use the same side-neutral WAIT sentinel as training.
+       // Metadata-less/model_21800 exports retain the historical value and clamp below.
+       if (onnx_.uses_late_reveal_raw_tts_contract()) {
+@@ -1570,6 +1572,7 @@
+       const int pend = pending_swing_dir_.load();
+       if (pend != 0 && (level_.load() == 0 || last_tts_at_windup_)) {
+         pending_swing_dir_.store(0);
++        natural_recovery_active_.store(false);
+         swing_dir_.store(pend);
+         std::fprintf(stderr, "[pp] queued swing dir applied -> %s\n",
+                      pend > 0 ? "FOREHAND" : "BACKHAND");
+@@ -1667,6 +1670,9 @@
+           set_planner_status_("native_completion_ledger");
+         }
+         level_.store(0);
++        // Natural recovery: the old ball's frozen target and its clock stay visible (down to the
++        // clip's last frame) until the next ball arrives, as in training.
++        natural_recovery_active_.store(cfg_.planner_mode && onnx_.continue_recovery_reference());
+         // Completion occurs after the edge cache was sampled above. Keep the cache consistent
+         // immediately so a same-side next flight cannot masquerade as a 1->1 continuation.
+         planner_sync_completion_cache(swing_level_prev_);
+@@ -1733,7 +1739,7 @@
+     // (the Gate 2.5 P2 3-5 s bare-hold tip). Training now zeroes the reference joint
+     // velocities on held envs (commands.py joint_vel); mirror it in every policy-hold
+     // state (level 0 = scripted hold AND the planner post-swing recovery hold).
+-    if (level_.load() == 0) {
++    if (level_.load() == 0 && !natural_recovery_active_.load()) {
+       refs.joint_vel.setZero();
+       // ...and the hold JOINT reference is the READY STAND, not the windup crouch
+       // (2026-07-05 lockstep with training commands.joint_pos): frame 0 is an
+@@ -2123,7 +2129,7 @@
+                        st.base_quat_w[3] * st.base_quat_w[3]));
+       const bool near_heading =
+           std::fabs(hold_yaw) < cfg_.static_handoff_yaw_max_deg * M_PI / 180.0;
+-      const bool post_recovery = planner_have_hold_ && near_station && near_heading &&
++      const bool post_recovery = !natural_recovery_active_.load() && planner_have_hold_ && near_station && near_heading &&
+           base_settled &&
+           ((t_since > cfg_.hold_recover_s && upright_still) ||
+            t_since > cfg_.hold_recover_s + 3.0);
+@@ -2220,7 +2226,8 @@
+     // during the hold — the wbc_runner rest-hold semantics). Untouched when not planner_mode.
+     if (cfg_.planner_mode) {
+       if (hitter_optional_reach_active_flight(
+-              planner_engaged_, level_.load())) {
++              planner_engaged_, level_.load()) ||
++          natural_recovery_active_.load()) {   // retain the visible old-ball recovery target
+         // Active swing -> frozen world target. A safety/guard transition to
+         // level 0 invalidates the active-flight view immediately even if the
+         // lifecycle cleanup runs on the following control tick.
+@@ -5014,12 +5021,16 @@
+           ? Vec2(base_pos[0], base_pos[1]) : station_session_origin_w_;
+       const Vec2 relative_target = Vec2(pos_w[0], pos_w[1]) - support_reference;
+       constexpr double kFixedTargetToleranceM = 0.030;
+-      const auto& pos_box = onnx_.hp_pos_boxes()[eng_clip];
++      const auto& pos_box = onnx_.hp_pos_support_boxes()[eng_clip];
+       const bool x_supported = onnx_.is_fixed_home_contract()
+           ? (relative_target[0] >= pos_box[0] && relative_target[0] <= pos_box[1])
+           : std::fabs(relative_target[0] - reach_offset_clip_[eng_clip][0]) <= kFixedTargetToleranceM;
+       const double y_margin = onnx_.is_fixed_home_contract() ? 0. : kFixedTargetToleranceM;
+-      const auto effective_y = EffectiveLateralSupport(cfg_.empirical_lateral_support, eng_clip, {hp_y_band_[eng_clip][0], hp_y_band_[eng_clip][1]});
++      // The qualified envelope, when exported, is the admission band; otherwise the declared one.
++      const std::array<double, 2> trained_y = onnx_.has_qualified_position_support()
++          ? std::array<double, 2>{pos_box[2], pos_box[3]}
++          : std::array<double, 2>{hp_y_band_[eng_clip][0], hp_y_band_[eng_clip][1]};
++      const auto effective_y = EffectiveLateralSupport(cfg_.empirical_lateral_support, eng_clip, trained_y);
+       const bool y_supported =
+           relative_target[1] >= effective_y[0] - y_margin &&
+           relative_target[1] <= effective_y[1] + y_margin;
+@@ -6207,6 +6218,9 @@
+   Vec4 last_external_base_quat_w_ = Vec4(1.0, 0.0, 0.0, 0.0);
+   std::uint64_t base_warn_tick_ = 0;    // repeat the stale-mocap warning every ~2 s
+   std::uint64_t gate_warn_tick_ = 0;    // throttle the target-gate rejection detail print
++  // Fixed-HOME natural recovery (old_ball_tail_until_arrival_v1): level 0 after the follow-through,
++  // but the finished ball's target and clock stay in the observation until the next engage.
++  std::atomic<bool> natural_recovery_active_{false};
+   bool planner_engaged_ = false;        // a planner swing is active (frozen target in flight)
+   bool planner_pending_station_active_ = false;  // Final: level-0 move/settle before clock release
+   Vec2 planner_pending_station_w_ = Vec2::Zero();
+--- a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/src/a3_deploy/a3_pingpong_main.cpp
++++ b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/src/a3_deploy/a3_pingpong_main.cpp
+@@ -457,7 +457,7 @@
+       if (policy.is_fixed_home_contract()) {
+         out << YAML::Key << "station_contract" << YAML::Value << "fixed_session_anchor_v1"
+             << YAML::Key << "position_support" << YAML::Value << YAML::BeginSeq;
+-        for (const auto& box : policy.hp_pos_boxes()) {
++        for (const auto& box : policy.hp_pos_support_boxes()) {
+           out << YAML::Flow << YAML::BeginSeq;
+           for (double v : box) out << v;
+           out << YAML::EndSeq;

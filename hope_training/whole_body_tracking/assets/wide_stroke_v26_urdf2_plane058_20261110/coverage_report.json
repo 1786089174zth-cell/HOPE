@@ -1,0 +1,528 @@
+{
+  "parent": "/home/dongc1/workspace/nohope/hope_training/whole_body_tracking/assets/wide_stroke_v25_improve3_20261107",
+  "parent_bank_sha256": "7b783b168a86034978c3d2713cb8fe1c675e95754e8368641124e3b9c23eab04",
+  "source": {
+    "source": {
+      "ref": "4e406be64 (origin/main_urdf_2)",
+      "path": "hope_training/whole_body_tracking/assets/stationary_reach_v5_coverage_20261104/",
+      "sha256": {
+        "train.npz": "1f37dba2b5bf13b499ae02dd6a2858619bb6c6a1019c032c03486cf97d5eac55",
+        "train.receipt.json": "aee65e48c2ec472711417015195d6a513424528f5881d2463487da3baeb7ee21",
+        "coverage.json": "6c2601985c415707bae76384157472a843ef4a9c39a87d2bcbed13e901fb52f2",
+        "README.md": "49ad89c5a2a178fd6a40dc58068d11438971d219dce568be2d1361b041c504b0"
+      },
+      "training_only": true
+    },
+    "source_rows": 853053,
+    "rows_within_plane": 487242,
+    "unchanged_admissible": 120130,
+    "resolved": 1292,
+    "selected": 121422,
+    "physics_passed": 121422,
+    "resolved_racket_vz_negative": 52,
+    "incoming_vz_negative": 86937,
+    "incoming_speed_bins": [
+      18469,
+      55515,
+      44544,
+      2894,
+      0
+    ],
+    "grid": {
+      "speed_mps": [
+        1.1,
+        1.4,
+        1.7,
+        2.0,
+        2.4,
+        2.8,
+        3.2
+      ],
+      "elevation_deg": [
+        -25.0,
+        -14.999999999999998,
+        -6.000000000000001,
+        3.0000000000000004,
+        12.000000000000002,
+        21.0,
+        29.999999999999996,
+        39.0,
+        48.00000000000001
+      ],
+      "azimuth_offset_deg": [
+        -14.0,
+        -7.0,
+        0.0,
+        7.0,
+        14.0
+      ]
+    },
+    "max_x": 0.58,
+    "candidate_sha256": "91e2f5c5c66084d9c8f55c438af3e152bf49e7afa4ed8dfc0c049822d0d911c6",
+    "seed": 20261110,
+    "builder_sha256": "d1d56d0d354f4b6d9d949ba874153184c8e01176e1047ad4f086bea0333ae65c",
+    "synthetic_timing": "Uniform per-family minimum lead + 0.02 s through 1.1999 s; not measured timing",
+    "scope": "Incoming ball and contact point are upstream values; only the racket velocity is re-solved under normal = velocity direction. Admission by the unchanged qualify(); not policy success."
+  },
+  "qualification": {
+    "rows": 121422,
+    "ik_passed": 44166,
+    "collision_passed": 43682,
+    "qualified": 43679,
+    "qualified_by_family": [
+      13791,
+      21768,
+      2399,
+      5721
+    ],
+    "collision_model_sha256": "8b06071a1a8ea60f927fa3b146007091e5348b20d979fa9db18568b7f40b4e8f",
+    "collision_checker_sha256": "2cc605dc80e45dfc23593a8d78194494e8d75aa1f2442d4ebf98150cf3515318",
+    "candidate_sha256": "91e2f5c5c66084d9c8f55c438af3e152bf49e7afa4ed8dfc0c049822d0d911c6",
+    "adapter_sha256": "16d4bdc3f0824b0941a19992e0fab151a3ada00dad8f76b11cb08d72eb1cdcf3",
+    "builder_sha256": "4b3be28a8c4d6a1105476b39895324f057644d2798b6ca3f0b34b05871c08ca1",
+    "limits": "Sampled kinematic and ball-law checks, not learned-policy or dynamic feasibility."
+  },
+  "parent_rows": 736369,
+  "new_rows": 29667,
+  "new_by_family": [
+    9662,
+    14897,
+    1781,
+    3327
+  ],
+  "total_rows": 766036,
+  "qualified": 543395,
+  "before": {
+    "stand_forehand": {
+      "rows": 135307,
+      "position_min": [
+        0.3612039089202881,
+        -0.5799943804740906,
+        0.8013826012611389
+      ],
+      "position_max": [
+        0.6922868490219116,
+        -0.27500614523887634,
+        1.4171100854873657
+      ],
+      "speed_bins": [
+        10524,
+        81401,
+        41574,
+        1808,
+        0
+      ],
+      "angle_bins": [
+        22823,
+        23813,
+        46701,
+        23962,
+        12082,
+        5926
+      ],
+      "height_bins": [
+        34927,
+        90019,
+        10008,
+        276,
+        77
+      ],
+      "spin_rps_bins": [
+        74390,
+        32009,
+        20654,
+        8254
+      ],
+      "spin_y_sign_bins": [
+        39005,
+        89901,
+        6401
+      ],
+      "tts_bins": [
+        65068,
+        46514,
+        16161,
+        7564
+      ],
+      "distinct_actor_cells": 37927
+    },
+    "stand_backhand": {
+      "rows": 141806,
+      "position_min": [
+        0.3639962375164032,
+        -0.2749980688095093,
+        0.803045392036438
+      ],
+      "position_max": [
+        0.6547586917877197,
+        0.09999338537454605,
+        1.4198626279830933
+      ],
+      "speed_bins": [
+        24106,
+        87451,
+        29881,
+        368,
+        0
+      ],
+      "angle_bins": [
+        17347,
+        16723,
+        36792,
+        35108,
+        17780,
+        18056
+      ],
+      "height_bins": [
+        22930,
+        63341,
+        47527,
+        5290,
+        2718
+      ],
+      "spin_rps_bins": [
+        70087,
+        35402,
+        24337,
+        11980
+      ],
+      "spin_y_sign_bins": [
+        51948,
+        85336,
+        4522
+      ],
+      "tts_bins": [
+        31575,
+        72177,
+        26189,
+        11865
+      ],
+      "distinct_actor_cells": 53815
+    },
+    "step_forehand": {
+      "rows": 118362,
+      "position_min": [
+        0.3613443374633789,
+        -0.9001204967498779,
+        0.810147762298584
+      ],
+      "position_max": [
+        0.6980649828910828,
+        -0.5800004601478577,
+        1.4011950492858887
+      ],
+      "speed_bins": [
+        8061,
+        70482,
+        39089,
+        730,
+        0
+      ],
+      "angle_bins": [
+        34260,
+        34901,
+        38674,
+        9370,
+        941,
+        216
+      ],
+      "height_bins": [
+        33045,
+        71521,
+        13435,
+        350,
+        11
+      ],
+      "spin_rps_bins": [
+        59993,
+        31043,
+        20330,
+        6996
+      ],
+      "spin_y_sign_bins": [
+        38423,
+        74676,
+        5263
+      ],
+      "tts_bins": [
+        33156,
+        53991,
+        20583,
+        10632
+      ],
+      "distinct_actor_cells": 17958
+    },
+    "step_backhand": {
+      "rows": 121218,
+      "position_min": [
+        0.3693554997444153,
+        0.10000932216644287,
+        0.8004173040390015
+      ],
+      "position_max": [
+        0.6961247324943542,
+        0.4597962498664856,
+        1.4198048114776611
+      ],
+      "speed_bins": [
+        22452,
+        73824,
+        24746,
+        196,
+        0
+      ],
+      "angle_bins": [
+        12565,
+        14394,
+        27448,
+        26776,
+        16984,
+        23051
+      ],
+      "height_bins": [
+        8363,
+        67694,
+        37270,
+        5110,
+        2781
+      ],
+      "spin_rps_bins": [
+        56297,
+        32781,
+        22798,
+        9342
+      ],
+      "spin_y_sign_bins": [
+        46135,
+        70863,
+        4220
+      ],
+      "tts_bins": [
+        7696,
+        77125,
+        25601,
+        10796
+      ],
+      "distinct_actor_cells": 33809
+    }
+  },
+  "after": {
+    "stand_forehand": {
+      "rows": 144237,
+      "position_min": [
+        0.3612039089202881,
+        -0.5799943804740906,
+        0.8012316823005676
+      ],
+      "position_max": [
+        0.5799999833106995,
+        -0.2750040292739868,
+        1.4173415899276733
+      ],
+      "speed_bins": [
+        11291,
+        85510,
+        45256,
+        2180,
+        0
+      ],
+      "angle_bins": [
+        24032,
+        26487,
+        49177,
+        26376,
+        12240,
+        5925
+      ],
+      "height_bins": [
+        35546,
+        95874,
+        12342,
+        393,
+        82
+      ],
+      "spin_rps_bins": [
+        75575,
+        33992,
+        22239,
+        12431
+      ],
+      "spin_y_sign_bins": [
+        45634,
+        91970,
+        6633
+      ],
+      "tts_bins": [
+        68345,
+        49956,
+        17614,
+        8322
+      ],
+      "distinct_actor_cells": 46729
+    },
+    "stand_backhand": {
+      "rows": 156088,
+      "position_min": [
+        0.3639962375164032,
+        -0.2749980688095093,
+        0.8010597825050354
+      ],
+      "position_max": [
+        0.5799999833106995,
+        0.09999338537454605,
+        1.4198626279830933
+      ],
+      "speed_bins": [
+        25716,
+        94811,
+        35094,
+        467,
+        0
+      ],
+      "angle_bins": [
+        17624,
+        20130,
+        40531,
+        38956,
+        20696,
+        18151
+      ],
+      "height_bins": [
+        23200,
+        67751,
+        53677,
+        7571,
+        3889
+      ],
+      "spin_rps_bins": [
+        70761,
+        37915,
+        27031,
+        20381
+      ],
+      "spin_y_sign_bins": [
+        64284,
+        87132,
+        4672
+      ],
+      "tts_bins": [
+        32980,
+        79483,
+        29509,
+        14116
+      ],
+      "distinct_actor_cells": 68001
+    },
+    "step_forehand": {
+      "rows": 119681,
+      "position_min": [
+        0.3613443374633789,
+        -0.9001204967498779,
+        0.8049349784851074
+      ],
+      "position_max": [
+        0.5799652338027954,
+        -0.5800002813339233,
+        1.3370541334152222
+      ],
+      "speed_bins": [
+        8068,
+        70951,
+        39844,
+        818,
+        0
+      ],
+      "angle_bins": [
+        34620,
+        35173,
+        39060,
+        9670,
+        942,
+        216
+      ],
+      "height_bins": [
+        33277,
+        72609,
+        13464,
+        329,
+        2
+      ],
+      "spin_rps_bins": [
+        60032,
+        31224,
+        20618,
+        7807
+      ],
+      "spin_y_sign_bins": [
+        39586,
+        74805,
+        5290
+      ],
+      "tts_bins": [
+        33422,
+        54702,
+        20773,
+        10784
+      ],
+      "distinct_actor_cells": 19275
+    },
+    "step_backhand": {
+      "rows": 123389,
+      "position_min": [
+        0.3693554997444153,
+        0.10000932216644287,
+        0.8004173040390015
+      ],
+      "position_max": [
+        0.5799999833106995,
+        0.4597962498664856,
+        1.4198048114776611
+      ],
+      "speed_bins": [
+        22601,
+        74793,
+        25778,
+        217,
+        0
+      ],
+      "angle_bins": [
+        12563,
+        14731,
+        28178,
+        27559,
+        17373,
+        22985
+      ],
+      "height_bins": [
+        8420,
+        68523,
+        38162,
+        5278,
+        3006
+      ],
+      "spin_rps_bins": [
+        56402,
+        33400,
+        23206,
+        10381
+      ],
+      "spin_y_sign_bins": [
+        47803,
+        71324,
+        4262
+      ],
+      "tts_bins": [
+        7696,
+        78657,
+        26073,
+        10963
+      ],
+      "distinct_actor_cells": 35980
+    }
+  },
+  "builder_sha256": "4b3be28a8c4d6a1105476b39895324f057644d2798b6ca3f0b34b05871c08ca1",
+  "duplicate_candidates": 14012,
+  "support_max_x": 0.58,
+  "qualified_rows_beyond_support_max_x_disqualified": 2965,
+  "limits": "TRAIN split only. New TTS is synthetic. Physics, sampled path bounds and self-clearance are admission checks, not policy success or hardware certification."
+}

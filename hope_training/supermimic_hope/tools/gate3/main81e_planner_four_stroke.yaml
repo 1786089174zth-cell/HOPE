@@ -1,0 +1,15 @@
+# Planner parameters our four-stroke fixed-HOME bundles need on main's (81e606a0c) hope_planner_cpp.
+# build_main_stack.sh merges this file, after main's own config/return_physics.yaml, into the
+# model21800_hardware.yaml of the workspace view it generates (logs/main_stack/hope_ws); that is the
+# only planner parameter file run_gate3.py hands to the Planner.
+#
+# Side selection on main (select_swing_sign_with_support) first asks which side's lateral band holds
+# the intercept, relative to the session HOME; main's default bands are model14600's
+# (FH [-0.83, -0.05], BH [-0.48, 0.30]). Ours are the bundle's qualified support boxes, i.e. the y
+# columns of `position_support` printed by the Runner's --inspect-policy (FH row, BH row). The two
+# bands meet at the trained split y = -0.275, which the harness passes as swing_side_split_y.
+# build_main_stack.sh compares them with a bundle when MAIN_STACK_POLICY_DIR is set.
+hope_planner:
+  ros__parameters:
+    swing_side_fh_y_range: [-0.9002, -0.275]
+    swing_side_bh_y_range: [-0.275, 0.4598]

@@ -1,0 +1,8 @@
+# Install into HOPE_SUPERMIMIC_DEPS, not the PPO/Isaac environment.
+# Warp 1.12 retains the legacy API needed by Isaac Sim 5.1 during bootstrap.
+mujoco==3.5.0
+mujoco-warp==3.5.0.2
+warp-lang==1.12.0
+glfw==2.11.0
+onnxruntime==1.23.2
+wandb==0.25.1

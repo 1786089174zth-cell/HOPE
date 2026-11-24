@@ -1,0 +1,809 @@
+{
+ "balls": 100,
+ "gap_s": 1.7,
+ "strike_plane_x": 0.0,
+ "kinds": {
+  "step_forehand_-0.70": {
+   "stroke": "step_forehand",
+   "lateral": -0.7,
+   "launch": [
+    2.4,
+    -1.4625,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -1.4625,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -1.4625,
+   "after_bounce_s": 0.5765
+  },
+  "step_forehand_-0.76": {
+   "stroke": "step_forehand",
+   "lateral": -0.76,
+   "launch": [
+    2.4,
+    -1.405,
+    0.49,
+    -3.0,
+    -0.1469,
+    2.2
+   ],
+   "y": -1.5225,
+   "strike_z": 0.8988,
+   "speed": 2.9287,
+   "vz": -2.6695,
+   "t_strike": 1.1795,
+   "bounce_x": 0.7875,
+   "bounce_y": -1.4839,
+   "after_bounce_s": 0.577
+  },
+  "step_forehand_-0.82": {
+   "stroke": "step_forehand",
+   "lateral": -0.82,
+   "launch": [
+    2.4,
+    -1.285,
+    0.49,
+    -3.0,
+    -0.3718,
+    2.2
+   ],
+   "y": -1.5825,
+   "strike_z": 0.8938,
+   "speed": 2.9453,
+   "vz": -2.6858,
+   "t_strike": 1.181,
+   "bounce_x": 0.7884,
+   "bounce_y": -1.4847,
+   "after_bounce_s": 0.5785
+  },
+  "step_backhand_+0.47": {
+   "stroke": "step_backhand",
+   "lateral": 0.47,
+   "launch": [
+    2.4,
+    -0.2925,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -0.2925,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -0.2925,
+   "after_bounce_s": 0.5765
+  },
+  "step_backhand_+0.53": {
+   "stroke": "step_backhand",
+   "lateral": 0.53,
+   "launch": [
+    2.4,
+    -0.2325,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -0.2325,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -0.2325,
+   "after_bounce_s": 0.5765
+  },
+  "step_backhand_+0.59": {
+   "stroke": "step_backhand",
+   "lateral": 0.59,
+   "launch": [
+    2.4,
+    -0.1725,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -0.1725,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -0.1725,
+   "after_bounce_s": 0.5765
+  },
+  "stand_-0.50": {
+   "stroke": "stand",
+   "lateral": -0.5,
+   "launch": [
+    2.4,
+    -1.2625,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -1.2625,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -1.2625,
+   "after_bounce_s": 0.5765
+  },
+  "stand_-0.15": {
+   "stroke": "stand",
+   "lateral": -0.15,
+   "launch": [
+    2.4,
+    -0.9125,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -0.9125,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -0.9125,
+   "after_bounce_s": 0.5765
+  },
+  "stand_+0.20": {
+   "stroke": "stand",
+   "lateral": 0.2,
+   "launch": [
+    2.4,
+    -0.5625,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -0.5625,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -0.5625,
+   "after_bounce_s": 0.5765
+  },
+  "stand_+0.38": {
+   "stroke": "stand",
+   "lateral": 0.38,
+   "launch": [
+    2.4,
+    -0.3825,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -0.3825,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -0.3825,
+   "after_bounce_s": 0.5765
+  }
+ },
+ "shots": [
+  {
+   "shot_id": 1,
+   "kind": "standard",
+   "stroke": "stand",
+   "lateral": -0.26
+  },
+  {
+   "shot_id": 2,
+   "kind": "standard",
+   "stroke": "stand",
+   "lateral": 0.05
+  },
+  {
+   "shot_id": 3,
+   "kind": "standard",
+   "stroke": "stand",
+   "lateral": -0.295
+  },
+  {
+   "shot_id": 4,
+   "kind": "standard",
+   "stroke": "stand",
+   "lateral": 0.105
+  },
+  {
+   "shot_id": 5,
+   "kind": "standard",
+   "stroke": "stand",
+   "lateral": -0.33
+  },
+  {
+   "shot_id": 6,
+   "kind": "standard",
+   "stroke": "stand",
+   "lateral": 0.15
+  },
+  {
+   "shot_id": 7,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 8,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 9,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 10,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 11,
+   "kind": "step_forehand_-0.70",
+   "stroke": "step_forehand",
+   "lateral": -0.7
+  },
+  {
+   "shot_id": 12,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 13,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 14,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 15,
+   "kind": "stand_+0.38",
+   "stroke": "stand",
+   "lateral": 0.38
+  },
+  {
+   "shot_id": 16,
+   "kind": "step_forehand_-0.70",
+   "stroke": "step_forehand",
+   "lateral": -0.7
+  },
+  {
+   "shot_id": 17,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 18,
+   "kind": "stand_-0.15",
+   "stroke": "stand",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 19,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 20,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 21,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 22,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 23,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 24,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 25,
+   "kind": "step_forehand_-0.70",
+   "stroke": "step_forehand",
+   "lateral": -0.7
+  },
+  {
+   "shot_id": 26,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 27,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 28,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 29,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 30,
+   "kind": "stand_-0.15",
+   "stroke": "stand",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 31,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 32,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 33,
+   "kind": "stand_-0.15",
+   "stroke": "stand",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 34,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 35,
+   "kind": "step_forehand_-0.70",
+   "stroke": "step_forehand",
+   "lateral": -0.7
+  },
+  {
+   "shot_id": 36,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 37,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 38,
+   "kind": "stand_-0.15",
+   "stroke": "stand",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 39,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 40,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 41,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 42,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 43,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 44,
+   "kind": "stand_-0.15",
+   "stroke": "stand",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 45,
+   "kind": "step_forehand_-0.70",
+   "stroke": "step_forehand",
+   "lateral": -0.7
+  },
+  {
+   "shot_id": 46,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 47,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 48,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 49,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 50,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 51,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 52,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 53,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 54,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 55,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 56,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 57,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 58,
+   "kind": "stand_+0.38",
+   "stroke": "stand",
+   "lateral": 0.38
+  },
+  {
+   "shot_id": 59,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 60,
+   "kind": "stand_-0.15",
+   "stroke": "stand",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 61,
+   "kind": "stand_+0.38",
+   "stroke": "stand",
+   "lateral": 0.38
+  },
+  {
+   "shot_id": 62,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 63,
+   "kind": "step_forehand_-0.70",
+   "stroke": "step_forehand",
+   "lateral": -0.7
+  },
+  {
+   "shot_id": 64,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 65,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 66,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 67,
+   "kind": "stand_+0.38",
+   "stroke": "stand",
+   "lateral": 0.38
+  },
+  {
+   "shot_id": 68,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 69,
+   "kind": "stand_+0.38",
+   "stroke": "stand",
+   "lateral": 0.38
+  },
+  {
+   "shot_id": 70,
+   "kind": "stand_-0.15",
+   "stroke": "stand",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 71,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 72,
+   "kind": "stand_-0.15",
+   "stroke": "stand",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 73,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 74,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 75,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 76,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 77,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 78,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 79,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 80,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 81,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 82,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 83,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 84,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 85,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 86,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 87,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 88,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 89,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 90,
+   "kind": "stand_-0.50",
+   "stroke": "stand",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 91,
+   "kind": "step_forehand_-0.70",
+   "stroke": "step_forehand",
+   "lateral": -0.7
+  },
+  {
+   "shot_id": 92,
+   "kind": "step_backhand_+0.53",
+   "stroke": "step_backhand",
+   "lateral": 0.53
+  },
+  {
+   "shot_id": 93,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 94,
+   "kind": "step_forehand_-0.70",
+   "stroke": "step_forehand",
+   "lateral": -0.7
+  },
+  {
+   "shot_id": 95,
+   "kind": "step_backhand_+0.47",
+   "stroke": "step_backhand",
+   "lateral": 0.47
+  },
+  {
+   "shot_id": 96,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 97,
+   "kind": "step_forehand_-0.82",
+   "stroke": "step_forehand",
+   "lateral": -0.82
+  },
+  {
+   "shot_id": 98,
+   "kind": "step_backhand_+0.59",
+   "stroke": "step_backhand",
+   "lateral": 0.59
+  },
+  {
+   "shot_id": 99,
+   "kind": "step_forehand_-0.76",
+   "stroke": "step_forehand",
+   "lateral": -0.76
+  },
+  {
+   "shot_id": 100,
+   "kind": "stand_+0.20",
+   "stroke": "stand",
+   "lateral": 0.2
+  }
+ ]
+}

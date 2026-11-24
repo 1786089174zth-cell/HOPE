@@ -71,3 +71,7 @@ artifacts/
 !/assets/stationary_reach_v4_ppq004_generalization_20261022/README.md
 !/assets/stationary_reach_v4_ppq004_generalization_20261022/coverage.json
 !/assets/stationary_reach_v4_ppq004_generalization_20261022/generation_report.json
+
+# SuperMimic's default four-stroke clips, question bank and adapter.
+!/assets/wide_stroke_v26_urdf2_plane058_20261110/
+!/assets/wide_stroke_v26_urdf2_plane058_20261110/**

@@ -1,0 +1,1092 @@
+{
+ "balls": 100,
+ "gap_s": 1.7,
+ "strike_plane_x": 0.0,
+ "kinds": {
+  "fast0.23s_-0.55": {
+   "stroke": "forehand 0.23 s",
+   "lateral": -0.55,
+   "launch": [
+    2.4,
+    -1.3125,
+    0.3,
+    -8.0,
+    0.0,
+    0.3
+   ],
+   "y": -1.3125,
+   "strike_z": 0.9088,
+   "speed": 5.1516,
+   "vz": 1.0377,
+   "t_strike": 0.363,
+   "bounce_x": 0.4295,
+   "bounce_y": -1.3125,
+   "after_bounce_s": 0.0835,
+   "after_net_s": 0.2255
+  },
+  "fast0.23s_-0.42": {
+   "stroke": "forehand 0.23 s",
+   "lateral": -0.42,
+   "launch": [
+    2.4,
+    -1.1825,
+    0.3,
+    -8.0,
+    0.0,
+    0.3
+   ],
+   "y": -1.1825,
+   "strike_z": 0.9088,
+   "speed": 5.1516,
+   "vz": 1.0377,
+   "t_strike": 0.363,
+   "bounce_x": 0.4295,
+   "bounce_y": -1.1825,
+   "after_bounce_s": 0.0835,
+   "after_net_s": 0.2255
+  },
+  "fast0.23s_-0.25": {
+   "stroke": "backhand 0.23 s",
+   "lateral": -0.25,
+   "launch": [
+    2.4,
+    -1.0125,
+    0.3,
+    -8.0,
+    0.0,
+    0.3
+   ],
+   "y": -1.0125,
+   "strike_z": 0.9088,
+   "speed": 5.1516,
+   "vz": 1.0377,
+   "t_strike": 0.363,
+   "bounce_x": 0.4295,
+   "bounce_y": -1.0125,
+   "after_bounce_s": 0.0835,
+   "after_net_s": 0.2255
+  },
+  "fast0.23s_+0.00": {
+   "stroke": "backhand 0.23 s",
+   "lateral": 0.0,
+   "launch": [
+    2.4,
+    -0.7625,
+    0.3,
+    -8.0,
+    0.0,
+    0.3
+   ],
+   "y": -0.7625,
+   "strike_z": 0.9088,
+   "speed": 5.1516,
+   "vz": 1.0377,
+   "t_strike": 0.363,
+   "bounce_x": 0.4295,
+   "bounce_y": -0.7625,
+   "after_bounce_s": 0.0835,
+   "after_net_s": 0.2255
+  },
+  "fast0.23s_+0.25": {
+   "stroke": "backhand 0.23 s",
+   "lateral": 0.25,
+   "launch": [
+    2.4,
+    -0.5125,
+    0.3,
+    -8.0,
+    0.0,
+    0.3
+   ],
+   "y": -0.5125,
+   "strike_z": 0.9088,
+   "speed": 5.1516,
+   "vz": 1.0377,
+   "t_strike": 0.363,
+   "bounce_x": 0.4295,
+   "bounce_y": -0.5125,
+   "after_bounce_s": 0.0835,
+   "after_net_s": 0.2255
+  },
+  "fast0.26s_-0.55": {
+   "stroke": "forehand 0.26 s",
+   "lateral": -0.55,
+   "launch": [
+    2.4,
+    -1.3125,
+    0.3,
+    -7.0,
+    0.0,
+    0.5
+   ],
+   "y": -1.3125,
+   "strike_z": 0.9453,
+   "speed": 4.3594,
+   "vz": 0.6946,
+   "t_strike": 0.421,
+   "bounce_x": 0.5256,
+   "bounce_y": -1.3125,
+   "after_bounce_s": 0.119,
+   "after_net_s": 0.2635
+  },
+  "fast0.26s_-0.42": {
+   "stroke": "forehand 0.26 s",
+   "lateral": -0.42,
+   "launch": [
+    2.4,
+    -1.1825,
+    0.3,
+    -7.0,
+    0.0,
+    0.5
+   ],
+   "y": -1.1825,
+   "strike_z": 0.9453,
+   "speed": 4.3594,
+   "vz": 0.6946,
+   "t_strike": 0.421,
+   "bounce_x": 0.5256,
+   "bounce_y": -1.1825,
+   "after_bounce_s": 0.119,
+   "after_net_s": 0.2635
+  },
+  "fast0.26s_-0.25": {
+   "stroke": "backhand 0.26 s",
+   "lateral": -0.25,
+   "launch": [
+    2.4,
+    -1.0125,
+    0.3,
+    -7.0,
+    0.0,
+    0.5
+   ],
+   "y": -1.0125,
+   "strike_z": 0.9453,
+   "speed": 4.3594,
+   "vz": 0.6946,
+   "t_strike": 0.421,
+   "bounce_x": 0.5256,
+   "bounce_y": -1.0125,
+   "after_bounce_s": 0.119,
+   "after_net_s": 0.2635
+  },
+  "fast0.26s_+0.00": {
+   "stroke": "backhand 0.26 s",
+   "lateral": 0.0,
+   "launch": [
+    2.4,
+    -0.7625,
+    0.3,
+    -7.0,
+    0.0,
+    0.5
+   ],
+   "y": -0.7625,
+   "strike_z": 0.9453,
+   "speed": 4.3594,
+   "vz": 0.6946,
+   "t_strike": 0.421,
+   "bounce_x": 0.5256,
+   "bounce_y": -0.7625,
+   "after_bounce_s": 0.119,
+   "after_net_s": 0.2635
+  },
+  "fast0.26s_+0.25": {
+   "stroke": "backhand 0.26 s",
+   "lateral": 0.25,
+   "launch": [
+    2.4,
+    -0.5125,
+    0.3,
+    -7.0,
+    0.0,
+    0.5
+   ],
+   "y": -0.5125,
+   "strike_z": 0.9453,
+   "speed": 4.3594,
+   "vz": 0.6946,
+   "t_strike": 0.421,
+   "bounce_x": 0.5256,
+   "bounce_y": -0.5125,
+   "after_bounce_s": 0.119,
+   "after_net_s": 0.2635
+  },
+  "fast0.30s_-0.55": {
+   "stroke": "forehand 0.30 s",
+   "lateral": -0.55,
+   "launch": [
+    2.4,
+    -1.3125,
+    0.49,
+    -6.5,
+    0.0,
+    0.0
+   ],
+   "y": -1.3125,
+   "strike_z": 1.0308,
+   "speed": 3.8269,
+   "vz": 0.9047,
+   "t_strike": 0.465,
+   "bounce_x": 0.5446,
+   "bounce_y": -1.3125,
+   "after_bounce_s": 0.143,
+   "after_net_s": 0.2955
+  },
+  "fast0.30s_-0.42": {
+   "stroke": "forehand 0.30 s",
+   "lateral": -0.42,
+   "launch": [
+    2.4,
+    -1.1825,
+    0.49,
+    -6.5,
+    0.0,
+    0.0
+   ],
+   "y": -1.1825,
+   "strike_z": 1.0308,
+   "speed": 3.8269,
+   "vz": 0.9047,
+   "t_strike": 0.465,
+   "bounce_x": 0.5446,
+   "bounce_y": -1.1825,
+   "after_bounce_s": 0.143,
+   "after_net_s": 0.2955
+  },
+  "fast0.30s_-0.25": {
+   "stroke": "backhand 0.30 s",
+   "lateral": -0.25,
+   "launch": [
+    2.4,
+    -1.0125,
+    0.49,
+    -6.5,
+    0.0,
+    0.0
+   ],
+   "y": -1.0125,
+   "strike_z": 1.0308,
+   "speed": 3.8269,
+   "vz": 0.9047,
+   "t_strike": 0.465,
+   "bounce_x": 0.5446,
+   "bounce_y": -1.0125,
+   "after_bounce_s": 0.143,
+   "after_net_s": 0.2955
+  },
+  "fast0.30s_+0.00": {
+   "stroke": "backhand 0.30 s",
+   "lateral": 0.0,
+   "launch": [
+    2.4,
+    -0.7625,
+    0.49,
+    -6.5,
+    0.0,
+    0.0
+   ],
+   "y": -0.7625,
+   "strike_z": 1.0308,
+   "speed": 3.8269,
+   "vz": 0.9047,
+   "t_strike": 0.465,
+   "bounce_x": 0.5446,
+   "bounce_y": -0.7625,
+   "after_bounce_s": 0.143,
+   "after_net_s": 0.2955
+  },
+  "fast0.30s_+0.25": {
+   "stroke": "backhand 0.30 s",
+   "lateral": 0.25,
+   "launch": [
+    2.4,
+    -0.5125,
+    0.49,
+    -6.5,
+    0.0,
+    0.0
+   ],
+   "y": -0.5125,
+   "strike_z": 1.0308,
+   "speed": 3.8269,
+   "vz": 0.9047,
+   "t_strike": 0.465,
+   "bounce_x": 0.5446,
+   "bounce_y": -0.5125,
+   "after_bounce_s": 0.143,
+   "after_net_s": 0.2955
+  },
+  "fast0.32s_-0.55": {
+   "stroke": "forehand 0.32 s",
+   "lateral": -0.55,
+   "launch": [
+    2.4,
+    -1.3125,
+    0.4,
+    -6.0,
+    0.0,
+    0.5
+   ],
+   "y": -1.3125,
+   "strike_z": 1.0188,
+   "speed": 3.4809,
+   "vz": 0.53,
+   "t_strike": 0.505,
+   "bounce_x": 0.576,
+   "bounce_y": -1.3125,
+   "after_bounce_s": 0.163,
+   "after_net_s": 0.3215
+  },
+  "fast0.32s_-0.42": {
+   "stroke": "forehand 0.32 s",
+   "lateral": -0.42,
+   "launch": [
+    2.4,
+    -1.1825,
+    0.4,
+    -6.0,
+    0.0,
+    0.5
+   ],
+   "y": -1.1825,
+   "strike_z": 1.0188,
+   "speed": 3.4809,
+   "vz": 0.53,
+   "t_strike": 0.505,
+   "bounce_x": 0.576,
+   "bounce_y": -1.1825,
+   "after_bounce_s": 0.163,
+   "after_net_s": 0.3215
+  },
+  "fast0.32s_-0.25": {
+   "stroke": "backhand 0.32 s",
+   "lateral": -0.25,
+   "launch": [
+    2.4,
+    -1.0125,
+    0.4,
+    -6.0,
+    0.0,
+    0.5
+   ],
+   "y": -1.0125,
+   "strike_z": 1.0188,
+   "speed": 3.4809,
+   "vz": 0.53,
+   "t_strike": 0.505,
+   "bounce_x": 0.576,
+   "bounce_y": -1.0125,
+   "after_bounce_s": 0.163,
+   "after_net_s": 0.3215
+  },
+  "fast0.32s_+0.00": {
+   "stroke": "backhand 0.32 s",
+   "lateral": 0.0,
+   "launch": [
+    2.4,
+    -0.7625,
+    0.4,
+    -6.0,
+    0.0,
+    0.5
+   ],
+   "y": -0.7625,
+   "strike_z": 1.0188,
+   "speed": 3.4809,
+   "vz": 0.53,
+   "t_strike": 0.505,
+   "bounce_x": 0.576,
+   "bounce_y": -0.7625,
+   "after_bounce_s": 0.163,
+   "after_net_s": 0.3215
+  },
+  "fast0.32s_+0.25": {
+   "stroke": "backhand 0.32 s",
+   "lateral": 0.25,
+   "launch": [
+    2.4,
+    -0.5125,
+    0.4,
+    -6.0,
+    0.0,
+    0.5
+   ],
+   "y": -0.5125,
+   "strike_z": 1.0188,
+   "speed": 3.4809,
+   "vz": 0.53,
+   "t_strike": 0.505,
+   "bounce_x": 0.576,
+   "bounce_y": -0.5125,
+   "after_bounce_s": 0.163,
+   "after_net_s": 0.3215
+  },
+  "standard_-0.50": {
+   "stroke": "standard",
+   "lateral": -0.5,
+   "launch": [
+    2.4,
+    -1.2625,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -1.2625,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -1.2625,
+   "after_bounce_s": 0.5765,
+   "after_net_s": 0.81
+  },
+  "standard_-0.15": {
+   "stroke": "standard",
+   "lateral": -0.15,
+   "launch": [
+    2.4,
+    -0.9125,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -0.9125,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -0.9125,
+   "after_bounce_s": 0.5765,
+   "after_net_s": 0.81
+  },
+  "standard_+0.20": {
+   "stroke": "standard",
+   "lateral": 0.2,
+   "launch": [
+    2.4,
+    -0.5625,
+    0.49,
+    -3.0,
+    0.0,
+    2.2
+   ],
+   "y": -0.5625,
+   "strike_z": 0.9004,
+   "speed": 2.9239,
+   "vz": -2.6644,
+   "t_strike": 1.179,
+   "bounce_x": 0.7874,
+   "bounce_y": -0.5625,
+   "after_bounce_s": 0.5765,
+   "after_net_s": 0.81
+  }
+ },
+ "shots": [
+  {
+   "shot_id": 1,
+   "kind": "standard",
+   "stroke": "standard",
+   "lateral": -0.26
+  },
+  {
+   "shot_id": 2,
+   "kind": "standard",
+   "stroke": "standard",
+   "lateral": 0.05
+  },
+  {
+   "shot_id": 3,
+   "kind": "standard",
+   "stroke": "standard",
+   "lateral": -0.295
+  },
+  {
+   "shot_id": 4,
+   "kind": "standard",
+   "stroke": "standard",
+   "lateral": 0.105
+  },
+  {
+   "shot_id": 5,
+   "kind": "standard",
+   "stroke": "standard",
+   "lateral": -0.33
+  },
+  {
+   "shot_id": 6,
+   "kind": "standard",
+   "stroke": "standard",
+   "lateral": 0.15
+  },
+  {
+   "shot_id": 7,
+   "kind": "fast0.30s_-0.25",
+   "stroke": "backhand 0.30 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 8,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 9,
+   "kind": "fast0.30s_+0.00",
+   "stroke": "backhand 0.30 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 10,
+   "kind": "fast0.23s_-0.42",
+   "stroke": "forehand 0.23 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 11,
+   "kind": "fast0.26s_+0.00",
+   "stroke": "backhand 0.26 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 12,
+   "kind": "fast0.32s_-0.55",
+   "stroke": "forehand 0.32 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 13,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 14,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 15,
+   "kind": "fast0.26s_-0.42",
+   "stroke": "forehand 0.26 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 16,
+   "kind": "fast0.32s_+0.25",
+   "stroke": "backhand 0.32 s",
+   "lateral": 0.25
+  },
+  {
+   "shot_id": 17,
+   "kind": "fast0.23s_+0.25",
+   "stroke": "backhand 0.23 s",
+   "lateral": 0.25
+  },
+  {
+   "shot_id": 18,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 19,
+   "kind": "fast0.26s_-0.25",
+   "stroke": "backhand 0.26 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 20,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 21,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 22,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 23,
+   "kind": "fast0.26s_-0.55",
+   "stroke": "forehand 0.26 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 24,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 25,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 26,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 27,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 28,
+   "kind": "fast0.26s_+0.25",
+   "stroke": "backhand 0.26 s",
+   "lateral": 0.25
+  },
+  {
+   "shot_id": 29,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 30,
+   "kind": "fast0.23s_+0.00",
+   "stroke": "backhand 0.23 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 31,
+   "kind": "fast0.23s_-0.25",
+   "stroke": "backhand 0.23 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 32,
+   "kind": "fast0.30s_-0.42",
+   "stroke": "forehand 0.30 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 33,
+   "kind": "fast0.32s_-0.25",
+   "stroke": "backhand 0.32 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 34,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 35,
+   "kind": "fast0.23s_-0.55",
+   "stroke": "forehand 0.23 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 36,
+   "kind": "fast0.30s_+0.25",
+   "stroke": "backhand 0.30 s",
+   "lateral": 0.25
+  },
+  {
+   "shot_id": 37,
+   "kind": "fast0.32s_-0.42",
+   "stroke": "forehand 0.32 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 38,
+   "kind": "fast0.32s_+0.00",
+   "stroke": "backhand 0.32 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 39,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 40,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 41,
+   "kind": "fast0.30s_-0.55",
+   "stroke": "forehand 0.30 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 42,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 43,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 44,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 45,
+   "kind": "fast0.26s_+0.25",
+   "stroke": "backhand 0.26 s",
+   "lateral": 0.25
+  },
+  {
+   "shot_id": 46,
+   "kind": "fast0.30s_+0.25",
+   "stroke": "backhand 0.30 s",
+   "lateral": 0.25
+  },
+  {
+   "shot_id": 47,
+   "kind": "fast0.23s_-0.25",
+   "stroke": "backhand 0.23 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 48,
+   "kind": "fast0.30s_-0.25",
+   "stroke": "backhand 0.30 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 49,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 50,
+   "kind": "fast0.30s_-0.55",
+   "stroke": "forehand 0.30 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 51,
+   "kind": "fast0.32s_+0.25",
+   "stroke": "backhand 0.32 s",
+   "lateral": 0.25
+  },
+  {
+   "shot_id": 52,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 53,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 54,
+   "kind": "fast0.23s_+0.00",
+   "stroke": "backhand 0.23 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 55,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 56,
+   "kind": "fast0.23s_+0.25",
+   "stroke": "backhand 0.23 s",
+   "lateral": 0.25
+  },
+  {
+   "shot_id": 57,
+   "kind": "fast0.32s_-0.25",
+   "stroke": "backhand 0.32 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 58,
+   "kind": "fast0.30s_+0.00",
+   "stroke": "backhand 0.30 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 59,
+   "kind": "fast0.30s_-0.42",
+   "stroke": "forehand 0.30 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 60,
+   "kind": "fast0.23s_-0.55",
+   "stroke": "forehand 0.23 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 61,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 62,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 63,
+   "kind": "fast0.32s_-0.42",
+   "stroke": "forehand 0.32 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 64,
+   "kind": "fast0.32s_-0.55",
+   "stroke": "forehand 0.32 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 65,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 66,
+   "kind": "fast0.26s_+0.00",
+   "stroke": "backhand 0.26 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 67,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 68,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 69,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 70,
+   "kind": "fast0.26s_-0.55",
+   "stroke": "forehand 0.26 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 71,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 72,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 73,
+   "kind": "fast0.23s_-0.42",
+   "stroke": "forehand 0.23 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 74,
+   "kind": "fast0.26s_-0.25",
+   "stroke": "backhand 0.26 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 75,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 76,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 77,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 78,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 79,
+   "kind": "fast0.32s_+0.00",
+   "stroke": "backhand 0.32 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 80,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 81,
+   "kind": "fast0.26s_-0.42",
+   "stroke": "forehand 0.26 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 82,
+   "kind": "fast0.30s_+0.00",
+   "stroke": "backhand 0.30 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 83,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 84,
+   "kind": "fast0.23s_+0.00",
+   "stroke": "backhand 0.23 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 85,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 86,
+   "kind": "standard_-0.50",
+   "stroke": "standard",
+   "lateral": -0.5
+  },
+  {
+   "shot_id": 87,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 88,
+   "kind": "fast0.26s_+0.00",
+   "stroke": "backhand 0.26 s",
+   "lateral": 0.0
+  },
+  {
+   "shot_id": 89,
+   "kind": "fast0.23s_-0.25",
+   "stroke": "backhand 0.23 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 90,
+   "kind": "standard_+0.20",
+   "stroke": "standard",
+   "lateral": 0.2
+  },
+  {
+   "shot_id": 91,
+   "kind": "fast0.26s_-0.25",
+   "stroke": "backhand 0.26 s",
+   "lateral": -0.25
+  },
+  {
+   "shot_id": 92,
+   "kind": "fast0.23s_-0.42",
+   "stroke": "forehand 0.23 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 93,
+   "kind": "fast0.30s_-0.55",
+   "stroke": "forehand 0.30 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 94,
+   "kind": "fast0.23s_+0.25",
+   "stroke": "backhand 0.23 s",
+   "lateral": 0.25
+  },
+  {
+   "shot_id": 95,
+   "kind": "fast0.26s_-0.55",
+   "stroke": "forehand 0.26 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 96,
+   "kind": "fast0.26s_-0.42",
+   "stroke": "forehand 0.26 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 97,
+   "kind": "fast0.32s_-0.42",
+   "stroke": "forehand 0.32 s",
+   "lateral": -0.42
+  },
+  {
+   "shot_id": 98,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  },
+  {
+   "shot_id": 99,
+   "kind": "fast0.23s_-0.55",
+   "stroke": "forehand 0.23 s",
+   "lateral": -0.55
+  },
+  {
+   "shot_id": 100,
+   "kind": "standard_-0.15",
+   "stroke": "standard",
+   "lateral": -0.15
+  }
+ ]
+}

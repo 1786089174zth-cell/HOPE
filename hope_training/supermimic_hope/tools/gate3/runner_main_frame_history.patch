@@ -1,0 +1,126 @@
+
+--- a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_onnx_policy.hpp
++++ b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_onnx_policy.hpp
+@@ -46,6 +46,14 @@
+     // 113 (legacy V15 position-mocap hitter_pure), or
+     // 118 (rewritten V15 position-mocap + finite HUGWBC gait command).
+     auto in0 = session_->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
++    // A hitter_pure policy may take N consecutive 110-D frames (oldest first) as one
++    // [1, 110*N] input; Run() then keeps the frame history. All other layouts are one frame.
++    // 110*N never collides with the single-frame widths (N >= 5 is unambiguous; N < 5 gives
++    // 220, 330, 440, none of which is a declared layout).
++    if (in0.size() == 2 && in0[1] > kObsDim110 && in0[1] % kObsDim110 == 0) {
++      obs_frames_ = static_cast<int>(in0[1] / kObsDim110);
++      in0[1] = kObsDim110;
++    }
+     if (in0.size() != 2 ||
+         (in0[1] != kObsDim && in0[1] != kObsDim175 && in0[1] != kObsDim177 &&
+          in0[1] != kObsDim110 && in0[1] != kObsDim112 &&
+@@ -73,6 +81,12 @@
+       }
+     }
+     auto md = session_->GetModelMetadata();
++    if (obs_frames_ > 1) {
++      const std::string declared = LookupMetaOptional(md, alloc, "obs_frame_history");
++      if (declared.empty() || std::stoi(declared) != obs_frames_)
++        throw std::runtime_error(
++            "ONNX obs input is [1,110*N] but metadata obs_frame_history does not declare N");
++    }
+     joint_names_ = SplitCsv(LookupMeta(md, alloc, "joint_names"));
+     body_names_ = SplitCsv(LookupMeta(md, alloc, "body_names"));
+     default_q_ = ToVec(LookupMeta(md, alloc, "default_joint_pos"));
+@@ -3356,10 +3370,15 @@
+ 
+   // Deterministic mean action (31), Isaac order.
+   Eigen::VectorXd mean_action(const Eigen::VectorXd& obs, int time_step) {
+-    auto out = Run(obs, time_step, {"actions"});
++    auto out = Run(obs, time_step, {"actions"}, true);
+     return Map(out[0], kNumJoints);
+   }
+ 
++  // Frames per ONNX input (1 unless the model declares obs_frame_history).
++  int obs_frames() const { return obs_frames_; }
++  // Forget the frame history: the next policy tick seeds every slot with its own frame.
++  void reset_obs_history() { obs_history_seeded_ = false; }
++
+   // Schema28's second named output is not another actuator command. It is the
+   // frozen core's 15 policy-owned action columns for the *next* observation's
+   // append-only shadow feedback. The composed 31-D output remains the sole
+@@ -3480,15 +3499,34 @@
+   }
+   bool compact_execution_ = false;
+   bool small_station_ = false;
++  // push_frame: this is the policy tick, so the observation enters the frame history.
++  // Reference-only calls leave a multi-frame input at zero; their outputs ignore obs.
+   std::vector<Ort::Value> Run(const Eigen::VectorXd& obs, int time_step,
+-                              const std::vector<const char*>& out_names) {
+-    obs_f_.resize(obs_dim_);
+-    for (int i = 0; i < obs_dim_; ++i) obs_f_[i] = static_cast<float>(obs[i]);
++                              const std::vector<const char*>& out_names,
++                              bool push_frame = false) {
++    const int width = obs_dim_ * obs_frames_;
++    obs_f_.assign(width, 0.f);
++    if (obs_frames_ == 1) {
++      for (int i = 0; i < obs_dim_; ++i) obs_f_[i] = static_cast<float>(obs[i]);
++    } else if (push_frame) {
++      if (!obs_history_seeded_) {
++        obs_history_.assign(width, 0.f);
++        for (int k = 0; k < obs_frames_; ++k)
++          for (int i = 0; i < obs_dim_; ++i)
++            obs_history_[k * obs_dim_ + i] = static_cast<float>(obs[i]);
++        obs_history_seeded_ = true;
++      } else {
++        for (int i = 0; i + obs_dim_ < width; ++i) obs_history_[i] = obs_history_[i + obs_dim_];
++        for (int i = 0; i < obs_dim_; ++i)
++          obs_history_[width - obs_dim_ + i] = static_cast<float>(obs[i]);
++      }
++      obs_f_ = obs_history_;
++    }
+     float ts = static_cast<float>(time_step);
+-    std::array<int64_t, 2> obs_shape{1, obs_dim_};
++    std::array<int64_t, 2> obs_shape{1, width};
+     std::array<int64_t, 2> ts_shape{1, 1};
+     std::array<Ort::Value, 2> ins{
+-        Ort::Value::CreateTensor<float>(mem_, obs_f_.data(), obs_dim_, obs_shape.data(), 2),
++        Ort::Value::CreateTensor<float>(mem_, obs_f_.data(), width, obs_shape.data(), 2),
+         Ort::Value::CreateTensor<float>(mem_, &ts, 1, ts_shape.data(), 2)};
+     static const char* in_names[2] = {"obs", "time_step"};
+     return session_->Run(Ort::RunOptions{nullptr}, in_names, ins.data(), 2,
+@@ -3509,7 +3547,7 @@
+       throw std::runtime_error(
+           "deploy.yaml task_plugin is not a3_pingpong_hitter_pure");
+     }
+-    if (deploy.observation_dim != obs_dim_ ||
++    if (deploy.observation_dim != obs_dim_ * obs_frames_ ||
+         deploy.action_dim != kNumJoints) {
+       throw std::runtime_error(
+           "deploy.yaml observation/action dimensions do not match the ONNX");
+@@ -3717,6 +3755,9 @@
+   int gait_max_cycles_ = 0;
+   double gait_velocity_max_ = 0.0;
+   std::vector<float> obs_f_;
++  int obs_frames_ = 1;                 // consecutive frames per ONNX input
++  std::vector<float> obs_history_;     // obs_frames_ frames, oldest first
++  bool obs_history_seeded_ = false;
+   int obs_dim_ = kObsDim;  // detected from the model input at load (180 full / 175 deploy_parity)
+ };
+ 
+
+--- a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp
++++ b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp
+@@ -1293,6 +1293,7 @@
+     const RuntimeHandoffReset handoff =
+         runtime_handoff_reset(onnx_.has_bounded_qdes_contract());
+     last_action_.setZero();
++    onnx_.reset_obs_history();
+     affine_handoff_feedback_.setZero();
+     core_action_shadow_owned_.setZero();
+     // v12 slew: the executed-target integrator restarts from default_q on every
+@@ -2143,6 +2144,7 @@
+           const RuntimeHandoffReset handoff =
+               runtime_handoff_reset(onnx_.has_bounded_qdes_contract());
+           last_action_.setZero();
++          onnx_.reset_obs_history();
+           core_action_shadow_owned_.setZero();
+           // v12 slew: the STATIC stand holds nominal (= default_q); the policy resumes
+           // from q_hat_prev = default_q exactly like a training reset.

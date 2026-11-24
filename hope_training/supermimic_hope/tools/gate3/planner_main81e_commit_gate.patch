@@ -1,0 +1,62 @@
+Packetizer (origin/main 81e606a0c): an optional commit gate ahead of the net.
+
+The hit-deadline commit is considered only after the ball has crossed net_x, so a ball that needs less than
+0.405 s from the net to the strike plane (anything faster than about 3.5 m/s at the plane) is announced late:
+0.22-0.30 s instead of 0.39 s. `commit_gate_x` (ROS parameter of hope_ball_flight_packetizer, default NaN =
+unchanged) makes the flight eligible once it is inside that x; the deadline clock, the fit and the packet are
+untouched, so every ball that already got its full reserve is committed at the same instant as before.
+Applied by tools/gate3/build_main_stack.sh; tools/supergate/commit_gate.py makes the same edit in Supergate.
+
+diff -ruN a/hope_ws/src/hope_planner_cpp/include/hope_planner_cpp/incoming_trajectory.hpp b/hope_ws/src/hope_planner_cpp/include/hope_planner_cpp/incoming_trajectory.hpp
+--- a/hope_ws/src/hope_planner_cpp/include/hope_planner_cpp/incoming_trajectory.hpp	2026-11-18 08:35:45.000000000 -0800
++++ b/hope_ws/src/hope_planner_cpp/include/hope_planner_cpp/incoming_trajectory.hpp	2026-11-22 19:21:29.807203264 -0800
+@@ -28,6 +28,13 @@
+ 
+ struct IncomingTrajectoryConfig {
+   double net_x = 1.37;
++  // Where a commit may first be considered, if not at the net (NaN = net_x). A fast
++  // ball needs 0.22-0.30 s from the net to the strike plane: gated at the net it can
++  // never get the 0.405 s reserve. With a finite gate the flight is eligible as soon
++  // as it is inside it (a ball first seen inside passes at once); net_x keeps deciding
++  // what the opponent's side is. The hit-deadline clock is unchanged, so slow balls
++  // are committed exactly when they were.
++  double commit_gate_x = std::numeric_limits<double>::quiet_NaN();
+   double estimator_window_s = 0.18;
+   double estimator_max_sample_gap_s = 0.0;
+   double commit_delay_s = 0.05;
+diff -ruN a/hope_ws/src/hope_planner_cpp/src/flight_packetizer_node.cpp b/hope_ws/src/hope_planner_cpp/src/flight_packetizer_node.cpp
+--- a/hope_ws/src/hope_planner_cpp/src/flight_packetizer_node.cpp	2026-11-18 08:35:45.000000000 -0800
++++ b/hope_ws/src/hope_planner_cpp/src/flight_packetizer_node.cpp	2026-11-22 19:21:29.808203285 -0800
+@@ -38,6 +38,8 @@
+ IncomingTrajectoryConfig declare_trajectory_config(rclcpp::Node& node) {
+   IncomingTrajectoryConfig config;
+   config.net_x = node.declare_parameter<double>("net_x", 1.37);
++  config.commit_gate_x = node.declare_parameter<double>(
++      "commit_gate_x", std::numeric_limits<double>::quiet_NaN());
+   config.estimator_window_s =
+       node.declare_parameter<double>("flight_window_s", 0.18);
+   config.estimator_max_sample_gap_s =
+diff -ruN a/hope_ws/src/hope_planner_cpp/src/incoming_trajectory.cpp b/hope_ws/src/hope_planner_cpp/src/incoming_trajectory.cpp
+--- a/hope_ws/src/hope_planner_cpp/src/incoming_trajectory.cpp	2026-11-18 08:35:45.000000000 -0800
++++ b/hope_ws/src/hope_planner_cpp/src/incoming_trajectory.cpp	2026-11-22 19:21:29.808203285 -0800
+@@ -222,15 +222,16 @@
+       sample.source_time_s <= history_[history_count_ - 1].source_time_s) {
+     return;
+   }
+-  const bool crossing = history_count_ > 0 &&
+-      history_[history_count_ - 1].position.x() > config_.net_x &&
+-      sample.position.x() <= config_.net_x;
++  const bool gated = std::isfinite(config_.commit_gate_x);
++  const double gate_x = gated ? config_.commit_gate_x : config_.net_x;
++  const bool crossing = history_count_ > 0 && sample.position.x() <= gate_x &&
++      (gated || history_[history_count_ - 1].position.x() > gate_x);
+   if (crossing && phase_ == IncomingPhase::kCollectIncoming) {
+     const BallSample& previous = history_[history_count_ - 1];
+     const double denominator = previous.position.x() - sample.position.x();
+     const double fraction = denominator > 1.0e-12
+         ? std::clamp(
+-              (previous.position.x() - config_.net_x) / denominator,
++              (previous.position.x() - gate_x) / denominator,
+               0.0, 1.0)
+         : 1.0;
+     net_cross_source_time_s_ = previous.source_time_s +
