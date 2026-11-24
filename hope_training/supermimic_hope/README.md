@@ -24,6 +24,22 @@ There are two implementations in this directory:
 
 ## Standalone trainer (`core/`)
 
+### Upper/lower SuperMimic actor
+
+Select `actor_architecture=dual_body_mlp_v1` in `train.py` for a fresh dual-body run.
+The default `single` selects the original actor, including for older checkpoints.
+For dual training resumes, pass the same architecture, frame count and hidden widths.
+Evaluation and export read the architecture from the checkpoint.
+
+Both branches use the configured SuperMimic actor widths and the same normalized
+history (10 frames by default). Each frame gives both branches body feedback and
+time to strike. Upper reads the racket target position and velocity, and Lower
+reads the station target. Upper produces 14 arm commands and two zero head slots.
+Lower reads that 16-value command before exploration noise, in the same 20 ms
+tick, and produces 15 waist and leg commands. The router restores the original
+A3 motor order. The imagined rollout updates both branches through one full-body
+dynamics model, one critic and the existing four-stroke reward.
+
 ### What it does
 
 - **Physics** (`core/sim.py`): the Gate3 A3 MJCF (`a3.py`: balls, table and vendor sole spheres

@@ -85,7 +85,7 @@ try:
     frames = int(config["frames"])
     active = torch.ones(31)
     active[[11, 16]] = 0.0  # passive head joints
-    actor = Actor(frames, tuple(config["actor_hidden"]), active)
+    actor = Actor(frames, tuple(config["actor_hidden"]), active, architecture=config.get("actor_architecture", "single"))
     source = "actor" if args.raw or "actor_ema" not in payload else "actor_ema"
     actor.load_state_dict(payload[source])
     actor.eval()
@@ -103,9 +103,6 @@ try:
     # --waist-roll-limit: the action is (q_des - default) / scale
     act_lo, act_hi = torch.full((31,), -1e9), torch.full((31,), 1e9)
     if args.waist_roll_limit is not None:
-        import types
-
-        sys.modules.setdefault("mujoco", types.ModuleType("mujoco"))  # a3's tables only; Isaac's Python has no mujoco
         from supermimic_hope import a3
 
         j = list(a3.JOINTS).index("waist_roll_joint")
@@ -155,6 +152,7 @@ try:
         obs_frame_history=str(frames),  # N consecutive hitter_pure frames, oldest first, as one input
         supermimic_training_backend=str(payload["format"]), supermimic_training_iteration=str(payload["iteration"]),
         supermimic_actor_weights="polyak_average" if source == "actor_ema" else "raw_iterate",
+        supermimic_actor_architecture=actor.architecture,
         supermimic_task=args.task,
         supermimic_waist_roll_limit_rad="none" if args.waist_roll_limit is None else f"{args.waist_roll_limit:g}",
         supermimic_command_clamp="target_rel_z=-0.31,0.53;target_vel=0.20,3.00,-1.05,1.25,-0.65,2.05" if args.command_clamp else "none",

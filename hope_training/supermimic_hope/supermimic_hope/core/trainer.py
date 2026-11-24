@@ -35,6 +35,7 @@ class TrainCfg:
     wm_refit_iterations: int = 0
     action_noise: float = 0.1  # collection noise per action dimension (paper Table A.5)
     frames: int = 10  # consecutive 110-D observations the actor receives
+    actor_architecture: str = "single"  # or dual_body_mlp_v1 (coupled upper/lower actor)
     actor_hidden: tuple[int, ...] = (2048, 1024, 512, 256)
     critic_hidden: tuple[int, ...] = (256, 128)
     dynamics_hidden: tuple[int, ...] = (2048, 2048, 2048)
@@ -66,7 +67,8 @@ class Trainer:
         self.task = FourStrokeTask(self.sim, cfg.task, seed=cfg.seed)
         self.ctx = self.task.context()  # (N, C): sim context + per-env task constants
         self.f = Dynamics(self.ctx.shape[1], cfg.dynamics_hidden, self.task.dt, amp=cfg.amp).to(dev)
-        self.actor = Actor(cfg.frames, cfg.actor_hidden, self.task.active, amp=cfg.amp).to(dev)
+        self.actor = Actor(cfg.frames, cfg.actor_hidden, self.task.active, amp=cfg.amp,
+                           architecture=cfg.actor_architecture).to(dev)
         self.a_prev = torch.zeros(cfg.num_envs, 31, device=dev)
         self.a_prev2 = torch.zeros(cfg.num_envs, 31, device=dev)
         self.task.reset(torch.arange(cfg.num_envs, device=dev), initial=True)
@@ -267,6 +269,9 @@ class Trainer:
         payload = torch.load(path, map_location=self.cfg.device, weights_only=False)
         if payload.get("format") != "supermimic_hope_core_v1":
             raise ValueError(f"{path} is not a supermimic_hope core checkpoint")
+        saved_arch = payload.get("config", {}).get("actor_architecture", "single")
+        if saved_arch != self.cfg.actor_architecture:
+            raise ValueError(f"Checkpoint actor is {saved_arch!r}, configured actor is {self.cfg.actor_architecture!r}")
         self.actor.load_state_dict(payload["actor"])
         self.actor_ema.load_state_dict(payload.get("actor_ema", payload["actor"]))
         # A simulator with more context than the checkpoint's (SimCfg.actuator_fit appends one entry): the context

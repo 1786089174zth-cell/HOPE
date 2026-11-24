@@ -37,7 +37,7 @@ def main(argv=None):
     cfg = from_dict(TrainCfg, payload["config"])
     active = torch.ones(31)
     active[[11, 16]] = 0.0
-    actor = Actor(cfg.frames, cfg.actor_hidden, active)
+    actor = Actor(cfg.frames, cfg.actor_hidden, active, architecture=cfg.actor_architecture)
     # Ship the averaged actor: single iterates swing by tens of points of hit rate.
     source = "actor_ema" if "actor_ema" in payload and "raw" not in argv[1:] else "actor"
     actor.load_state_dict(payload[source])
@@ -65,6 +65,7 @@ def main(argv=None):
         action_scale=csv(a3.ACTION_SCALE), qdes_safe_lower_rad=csv(a3.QDES_LO), qdes_safe_upper_rad=csv(a3.QDES_HI),
         joint_stiffness=csv(a3.KP), joint_damping=csv(a3.KD), passive_joint_names="head_yaw_joint,head_pitch_joint",
         training_backend=str(payload["format"]), training_iteration=str(payload["iteration"]),
+        supermimic_actor_architecture=cfg.actor_architecture,
         actor_weights="polyak_average" if source == "actor_ema" else "raw_iterate",
         deploy_bundle="NOT_BUILT: hitter_pure metadata and deploy.yaml are not written by this export",
     )

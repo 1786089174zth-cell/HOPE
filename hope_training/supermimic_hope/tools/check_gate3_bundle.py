@@ -44,7 +44,10 @@ def main(argv=None):
     payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
     active = torch.ones(31)
     active[[11, 16]] = 0.0
-    actor = Actor(frames, tuple(payload["config"]["actor_hidden"]), active)
+    architecture = payload["config"].get("actor_architecture", "single")
+    if meta.get("supermimic_actor_architecture", "single") != architecture:
+        raise SystemExit("Bundle actor architecture differs from checkpoint")
+    actor = Actor(frames, tuple(payload["config"]["actor_hidden"]), active, architecture=architecture)
     actor.load_state_dict(payload["actor" if meta["supermimic_actor_weights"] == "raw_iterate" else "actor_ema"])
     actor.eval()
     # The graph's own bounds (build_gate3_bundle.py --command-clamp, --waist-roll-limit), from its metadata

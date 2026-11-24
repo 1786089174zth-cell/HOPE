@@ -19,9 +19,12 @@ from __future__ import annotations
 import hashlib
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import mujoco
 import numpy as np
+
+if TYPE_CHECKING:
+    import mujoco
 
 REPO = Path(__file__).resolve().parents[3]
 GATE3_XML = REPO / "a3_deploy/A3_MuJoCo_Sim/aimrt_mujoco_sim/src/models/bin/cfg/model/a3_pingpong/a3_pingpong.xml"
@@ -59,6 +62,8 @@ SOLE_SPHERE = re.compile(r"(left|right)_foot\d+_collision")
 
 
 def build_model(xml: Path = GATE3_XML, check_sha: bool = True) -> tuple[mujoco.MjModel, dict]:
+    import mujoco
+
     raw = Path(xml).read_bytes()
     sha = hashlib.sha256(raw).hexdigest()
     if check_sha and sha != GATE3_XML_SHA256:
