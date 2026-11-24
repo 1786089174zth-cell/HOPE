@@ -40,6 +40,19 @@ tick, and produces 15 waist and leg commands. The router restores the original
 A3 motor order. The imagined rollout updates both branches through one full-body
 dynamics model, one critic and the existing four-stroke reward.
 
+Use `learn.body_reward_alpha=0.5` to give each branch half weight on the
+other branch's local rewards along the imagined trajectory. The default
+`1.0` optimizes the original team return. Upper owns face alignment and
+resting left-arm tracking. Lower owns station, footwork, heading, stance
+and waist-rest/direct-waist tracking. Each gets its own motors' share of
+the action-rate, hold-rate, second-difference and soft joint-limit terms.
+Both receive racket position and velocity, predicted returns and landing,
+global posture/imitation, table clearance and the mixed waist/arm targets.
+Optional whole-body torque/range guards also stay shared. The value function
+always fits the original team rewards and supplies the same terminal value
+to both actor objectives. Branch gradients are routed before one joint clip
+and optimizer step. The two logged branch gradient norms are pre-clipping.
+
 ### What it does
 
 - **Physics** (`core/sim.py`): the Gate3 A3 MJCF (`a3.py`: balls, table and vendor sole spheres

@@ -32,6 +32,7 @@ class LearnCfg:
     grad_value: float = 0.1
     critic_epochs: int = 5
     critic_minibatches: int = 4
+    body_reward_alpha: float = 1.0  # weight of the other branch's local reward in a dual actor update
 
 
 def cosine_lr(base, it, decay_iters=250_000, floor=0.03):
@@ -121,6 +122,10 @@ class CapturedUpdate:
 def _step(opt, loss, params, max_norm, clip_value=0.0):
     opt.zero_grad(set_to_none=True)
     loss.backward()
+    return _apply_gradients(opt, params, max_norm, clip_value)
+
+
+def _apply_gradients(opt, params, max_norm, clip_value=0.0):
     norm = nn.utils.clip_grad_norm_(params, max_norm)
     if clip_value > 0:
         nn.utils.clip_grad_value_(params, clip_value)
@@ -198,6 +203,12 @@ class PolicyLearner:
 
     def __init__(self, actor, critic, dynamics, task, cfg: LearnCfg, capture=True):
         self.actor, self.critic, self.f, self.task, self.cfg = actor, critic, dynamics, task, cfg
+        self.dual = getattr(actor, "architecture", "single") == "dual_body_mlp_v1"
+        if not 0 <= cfg.body_reward_alpha <= 1 or (not self.dual and cfg.body_reward_alpha != 1):
+            raise ValueError("body_reward_alpha must be in [0, 1] and requires a dual actor for values below 1")
+        if self.dual:
+            self.upper_params = list(actor.net.upper.parameters())
+            self.lower_params = list(actor.net.lower.parameters())
         self.actor_params = list(actor.net.parameters())
         self.critic_params = list(critic.net.parameters())
         self.opt_pi = _adam(self.actor_params, cfg.lr, betas=(0.9, 0.95))
@@ -210,6 +221,11 @@ class PolicyLearner:
             set_lr(opt, lr)
 
     def imagine(self, b):
+        """Full-team rollout, including the original full-team rewards for the critic."""
+        rollout, _ = self._imagine(b, by_body=False)
+        return rollout
+
+    def _imagine(self, b, by_body):
         """Roll the actor through the model along the window's task tape.
 
         ``b`` holds ``horizon + 1`` logged steps: step 0 seeds the state, the
@@ -225,6 +241,10 @@ class PolicyLearner:
         # The frame before the window carries the action before ``a_prev`` in its last-action slot.
         a_prev2 = history[:, -1, 65:96] if history.shape[1] else a_prev
         ret = torch.zeros(s.shape[0], device=s.device)
+        upper_local = lower_local = ret  # all three accumulators update out of place
+        reward_options = {}
+        if by_body:
+            reward_options["body_joints"] = (self.actor.net.upper_joints, self.actor.net.lower_joints)
         survival = torch.ones_like(ret)
         feats, rewards, dones = [], [], []
         # Reference kinematics of the whole window in one batched pass.
@@ -245,9 +265,14 @@ class PolicyLearner:
                 q_exec = task.handoff(s, q_exec, tape, *gains)[0]
             s_prev, s = s, self.f(s, q_exec, ctx)
             r = task.reward(s, a, a_prev, nxt, ref_bodies=tuple(x[:, t + 1] for x in ref_bodies), a_prev2=a_prev2,
-                            s_prev=s_prev, q_exec=q_exec)
+                            s_prev=s_prev, q_exec=q_exec, **reward_options)
             d = task.term_prob(s, nxt)
-            ret = ret + cfg.gamma ** t * survival * r
+            discount = cfg.gamma ** t * survival
+            if by_body:
+                r, upper, lower = r
+                upper_local = upper_local + discount * upper
+                lower_local = lower_local + discount * lower
+            ret = ret + discount * r
             survival = survival * (1 - d)
             rewards.append(r.detach())
             dones.append(d.detach())
@@ -257,7 +282,8 @@ class PolicyLearner:
         last_feat = task.critic_obs(s, a_prev, last, ctx)
         value = self.critic(last_feat).clamp(max=self.v_max)
         ret = ret + cfg.gamma ** H * survival * value
-        return ret, torch.stack(feats), torch.stack(rewards), torch.stack(dones), last_feat.detach(), survival.detach()
+        rollout = ret, torch.stack(feats), torch.stack(rewards), torch.stack(dones), last_feat.detach(), survival.detach()
+        return rollout, (upper_local, lower_local)
 
     def update(self, b):
         return self._update(b)
@@ -268,9 +294,9 @@ class PolicyLearner:
         for module in (self.f, self.critic):
             for p in module.parameters():
                 p.requires_grad_(False)
-        ret, feats, rewards, dones, last_feat, survival = self.imagine(b)
-        loss = -ret.mean()
-        norm = _step(self.opt_pi, loss, self.actor_params, cfg.grad_norm, cfg.grad_value)
+        rollout, local_returns = self._imagine(b, by_body=self.dual)
+        ret, feats, rewards, dones, last_feat, survival = rollout
+        actor_metrics = self._update_actor(ret, *local_returns)
         for p in self.critic.parameters():
             p.requires_grad_(True)
         value_loss = self.fit_critic(feats, rewards, dones, last_feat)
@@ -278,9 +304,34 @@ class PolicyLearner:
             "policy/imagined_return": ret.detach().mean(),
             "policy/imagined_reward_per_s": rewards.mean() / self.task.dt,
             "policy/imagined_survival": survival.mean(),
-            "policy/grad_norm": norm,
+            **actor_metrics,
             "policy/value_loss": value_loss,
         }
+
+    def _update_actor(self, team, upper_local, lower_local):
+        cfg = self.cfg
+        self.opt_pi.zero_grad(set_to_none=True)
+        alpha = cfg.body_reward_alpha
+        upper_return = lower_return = team
+        if alpha == 1:
+            (-team.mean()).backward()
+        else:
+            # team includes the common bootstrap and survival weighting. Discount
+            # only the OTHER body's local contributions inside the imagined horizon.
+            upper_return = team - (1 - alpha) * lower_local
+            lower_return = team - (1 - alpha) * upper_local
+            (-upper_return.mean()).backward(inputs=self.upper_params, retain_graph=True)
+            (-lower_return.mean()).backward(inputs=self.lower_params)
+        metrics = {}
+        if self.dual:
+            for name, params, objective in (("upper", self.upper_params, upper_return),
+                                            ("lower", self.lower_params, lower_return)):
+                norms = [p.grad.detach().norm() for p in params]
+                metrics[f"policy/{name}_grad_norm"] = torch.stack(norms).norm()
+                metrics[f"policy/{name}_return"] = objective.detach().mean()
+        # Both branches participate in one global clipping and one optimizer step.
+        metrics["policy/grad_norm"] = _apply_gradients(self.opt_pi, self.actor_params, cfg.grad_norm, cfg.grad_value)
+        return metrics
 
     def fit_critic(self, feats, rewards, dones, last_feat):
         cfg = self.cfg

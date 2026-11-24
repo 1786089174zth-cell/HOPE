@@ -39,6 +39,10 @@ FAMILIES = ("stand_forehand", "stand_backhand", "step_forehand", "step_backhand"
 RIGHT_ARM = (13, 18, 22, 24, 26, 28, 30)  # shoulder pitch/roll/yaw, elbow, wrist roll/pitch/yaw
 LEFT_ARM = tuple(a3.JOINTS.index(a3.JOINTS[i].replace("right_", "left_")) for i in RIGHT_ARM)
 HEAD = (11, 16)
+UPPER_REWARD_TERMS = ("racket_normal", "left_arm", "direct_face")
+LOWER_REWARD_TERMS = ("feet_pos", "feet_height", "feet_ori", "root_xy", "feet_station",
+                      "root_heading", "feet_heading", "feet_slip", "stance_command",
+                      "waist_rest", "direct_waist_roll")
 TRACKED = ("pelvis_link", "left_hip_roll_Link", "left_knee_Link", "left_ankle_roll_Link", "right_hip_roll_Link",
            "right_knee_Link", "right_ankle_roll_Link", "torso_Link", "left_shoulder_roll_Link", "left_elbow_Link",
            "left_wrist_yaw_Link", "right_shoulder_roll_Link", "right_elbow_Link", "right_wrist_yaw_Link")
@@ -1240,11 +1244,14 @@ class FourStrokeTask:
             flat = self.kin(ref.reshape(-1, ref.shape[-1]))
         return tuple(x.reshape(*ref.shape[:-1], *x.shape[1:]) for x in flat)
 
-    def reward(self, s, a, a_prev, tape, detail=False, ref_bodies=None, a_prev2=None, s_prev=None, q_exec=None):
+    def reward(self, s, a, a_prev, tape, detail=False, ref_bodies=None, a_prev2=None, s_prev=None, q_exec=None,
+               body_joints=None):
         """Reward of reaching ``s`` with action ``a`` under the tape of the reached tick (dt-scaled).
         ``a_prev2`` is the action before ``a_prev``; without it the second-difference term is zero.
         ``s_prev`` and ``q_exec`` are the state the tick started from and the PD target it ran with: the torque
-        the command asked for (``torque_limit``); without them that term is zero."""
+        the command asked for (``torque_limit``); without them that term is zero.
+        For actor training, body_joints=(upper, lower) also returns the two local
+        contributions in timestep units. The team total always includes every term once."""
         cfg, ref = self.cfg, tape["ref"]
         bodies = self.kin(s)
         if ref_bodies is None:
@@ -1263,13 +1270,15 @@ class FourStrokeTask:
                                  if "swing" in tape and cfg.extra_free + cfg.extra_urgent_free > 0 else None)
         terms = {k: weights[k] * v for k, v in tracked.items()}
         smooth = tape["smooth"] if "smooth" in tape else 1.0  # per joint: TaskCfg.extra_front_smooth
-        rate = (smooth * (a - a_prev).square()).sum(-1)
+        joint_rate = smooth * (a - a_prev).square()
+        rate = joint_rate.sum(-1)
         terms["action_rate"] = cfg.action_rate * rate
         terms["hold_action_rate"] = cfg.hold_action_rate * tape["in_hold"] * rate
-        terms["action_accel"] = cfg.action_accel * (
-            (smooth * (a - 2 * a_prev + a_prev2).square()).sum(-1) if a_prev2 is not None else torch.zeros_like(rate))
+        joint_accel = smooth * (a - 2 * a_prev + a_prev2).square() if a_prev2 is not None else torch.zeros_like(a)
+        terms["action_accel"] = cfg.action_accel * joint_accel.sum(-1)
         q = s[:, 13:13 + NJ]
-        terms["joint_limit"] = cfg.joint_limit * ((self.soft_lo - q).clamp_min(0) + (q - self.soft_hi).clamp_min(0)).sum(-1)
+        limit_excess = (self.soft_lo - q).clamp_min(0) + (q - self.soft_hi).clamp_min(0)
+        terms["joint_limit"] = cfg.joint_limit * limit_excess.sum(-1)
         # Strike interface: racket on the moving contact path, at the commanded velocity and face.
         tts = tape["tts"]
         gate = ((tts.abs() <= cfg.strike_window_s + 1e-6) & (tape["in_hold"] < 0.5)).float()
@@ -1351,6 +1360,18 @@ class FourStrokeTask:
         beyond = ((self.hard_lo + cfg.range_keepout_margin - q).clamp_min(0) + (q - self.hard_hi + cfg.range_keepout_margin).clamp_min(0)) * self.keepout
         terms["range_keepout"] = cfg.range_keepout * (1 - torch.exp(-beyond.square().sum(-1) / cfg.range_keepout_std ** 2))
         total = self.dt * sum(terms.values())
+        if body_joints is not None:
+            if detail:
+                raise ValueError("Request body rewards or detailed diagnostics separately")
+            # Reuse the very same per-joint errors (including the phase and smooth masks).
+            # Racket path/speed, returns, global posture, table/torque/range guards and
+            # mixed waist+arm targets stay in the team reward shared by both branches.
+            rate_weight = cfg.action_rate + cfg.hold_action_rate * tape["in_hold"][:, None]
+            joint_terms = rate_weight * joint_rate + cfg.action_accel * joint_accel + cfg.joint_limit * limit_excess
+            upper_ids, lower_ids = body_joints
+            upper = joint_terms.index_select(-1, upper_ids).sum(-1) + sum(terms[k] for k in UPPER_REWARD_TERMS)
+            lower = joint_terms.index_select(-1, lower_ids).sum(-1) + sum(terms[k] for k in LOWER_REWARD_TERMS if k in terms)
+            return total, self.dt * upper, self.dt * lower
         if not detail:
             return total
         info = dict(terms=terms, racket_pos_err=(rpos - tape["tpos"]).norm(dim=-1),

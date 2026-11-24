@@ -38,6 +38,7 @@ class DualBodyMLP(nn.Module):
         if len(upper) != 16 or len(lower) != 15 or sorted(lower + upper) != list(range(ACT)):
             raise ValueError("Dual actor requires the A3 waist, legs, arms and two passive head joints")
         self.register_buffer("upper_joints", torch.tensor(upper), persistent=False)
+        self.register_buffer("lower_joints", torch.tensor(lower), persistent=False)
         self.register_buffer("motor_order", torch.argsort(torch.tensor(lower + upper)), persistent=False)
         # Per 110-D frame: shared body feedback [0:101], station [101:103],
         # racket position/velocity [103:109], and time to strike [109].
