@@ -1,0 +1,31 @@
+{
+  "run": "gate3-100-work/fixed-home-26-35866-localids",
+  "serves": 26,
+  "engaged": 26,
+  "falls": 0,
+  "certification_pass": false,
+  "runner_sha256": "464ca3a77ee6ea2ff04b14a7555b8562365aed0335f8f5612391b25fe8cf71bf",
+  "policy_sha256": "41b85b2ba3cf4f4c814ea46cc37244fe220e017b08393eb28fb0258dba5b13fc",
+  "packetizer": null,
+  "report_contacts": 26,
+  "report_legal_landings": 25,
+  "contacts": 26,
+  "legal_landings": 25,
+  "rejudged_shots": [],
+  "no_contact_shots": [],
+  "contact_not_legal_shots": [
+    1
+  ],
+  "by_side": {
+    "backhand": {
+      "shots": 18,
+      "contacts": 18,
+      "legal_landings": 17
+    },
+    "forehand": {
+      "shots": 8,
+      "contacts": 8,
+      "legal_landings": 8
+    }
+  }
+}

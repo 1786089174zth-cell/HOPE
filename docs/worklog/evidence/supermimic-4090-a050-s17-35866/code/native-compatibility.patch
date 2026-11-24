@@ -1,0 +1,344 @@
+diff --git a/a3_deploy/a3_deploy_example/scripts/build_a3_deploy_pkg.sh b/a3_deploy/a3_deploy_example/scripts/build_a3_deploy_pkg.sh
+index 2ec5d37..8ac7046 100755
+--- a/a3_deploy/a3_deploy_example/scripts/build_a3_deploy_pkg.sh
++++ b/a3_deploy/a3_deploy_example/scripts/build_a3_deploy_pkg.sh
+@@ -522,6 +522,8 @@ configure_and_build() {
+   fi
+ 
+   local cmake_args=(
++    -Dzstd_LOCAL_SOURCE="/home/tianhe/ppq004-view/gate3-100-work/zstd-1.5.7"
++    -Dlz4_LOCAL_SOURCE="/home/tianhe/ppq004-view/gate3-100-work/lz4-1.10.0"
+     -S "${GEAR_ROOT}"
+     -B "${BUILD_DIR}"
+     -DA3_THIRDPARTY_ROOT="${A3_THIRDPARTY_ROOT:-${GEAR_ROOT}/thirdparty}"
+diff --git a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_onnx_policy.hpp b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_onnx_policy.hpp
+index c53e5cb..4e6312c 100644
+--- a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_onnx_policy.hpp
++++ b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_onnx_policy.hpp
+@@ -46,6 +46,14 @@ class PpOnnxPolicy {
+     // 113 (legacy V15 position-mocap hitter_pure), or
+     // 118 (rewritten V15 position-mocap + finite HUGWBC gait command).
+     auto in0 = session_->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
++    // A hitter_pure policy may take N consecutive 110-D frames (oldest first) as one
++    // [1, 110*N] input; Run() then keeps the frame history. All other layouts are one frame.
++    // 110*N never collides with the single-frame widths (N >= 5 is unambiguous; N < 5 gives
++    // 220, 330, 440, none of which is a declared layout).
++    if (in0.size() == 2 && in0[1] > kObsDim110 && in0[1] % kObsDim110 == 0) {
++      obs_frames_ = static_cast<int>(in0[1] / kObsDim110);
++      in0[1] = kObsDim110;
++    }
+     if (in0.size() != 2 ||
+         (in0[1] != kObsDim && in0[1] != kObsDim175 && in0[1] != kObsDim177 &&
+          in0[1] != kObsDim110 && in0[1] != kObsDim112 &&
+@@ -73,6 +81,12 @@ class PpOnnxPolicy {
+       }
+     }
+     auto md = session_->GetModelMetadata();
++    if (obs_frames_ > 1) {
++      const std::string declared = LookupMetaOptional(md, alloc, "obs_frame_history");
++      if (declared.empty() || std::stoi(declared) != obs_frames_)
++        throw std::runtime_error(
++            "ONNX obs input is [1,110*N] but metadata obs_frame_history does not declare N");
++    }
+     joint_names_ = SplitCsv(LookupMeta(md, alloc, "joint_names"));
+     body_names_ = SplitCsv(LookupMeta(md, alloc, "body_names"));
+     default_q_ = ToVec(LookupMeta(md, alloc, "default_joint_pos"));
+@@ -1682,6 +1696,29 @@ class PpOnnxPolicy {
+       }
+     };
+     if (!hp_pos_s.empty()) parse_boxes(hp_pos_s, hp_pos_boxes_);
++    // Four-stroke exports: the qualified stroke-pool envelope is the admission box (the declared
++    // box stays the HOLD/idle geometry), and the old ball's tail stays visible until the next ball.
++    const std::string support_contract = LookupMetaOptional(md, alloc, "hitter_pure_position_support_contract");
++    const std::string support_boxes = LookupMetaOptional(md, alloc, "hitter_pure_pos_support_per_clip");
++    if (!support_contract.empty() || !support_boxes.empty()) {
++      if (support_contract != "qualified_stroke_pool_envelope_v1" || !is_fixed_home_contract())
++        throw std::runtime_error("unsupported qualified position envelope contract");
++      parse_boxes(support_boxes, hp_pos_support_boxes_);
++      if (hp_pos_support_boxes_.size() != 2)
++        throw std::runtime_error("qualified support requires two FH/BH boxes");
++      for (const auto& box : hp_pos_support_boxes_) {
++        for (double value : box)
++          if (!std::isfinite(value)) throw std::runtime_error("non-finite qualified support");
++        for (int axis = 0; axis < 6; axis += 2)
++          if (box[axis] > box[axis + 1]) throw std::runtime_error("reversed qualified support");
++      }
++    }
++    const auto recovery_contract = LookupMetaOptional(md, alloc, "hitter_pingpong_recovery_reference_contract");
++    if (!recovery_contract.empty() && recovery_contract != "old_ball_tail_until_arrival_v1")
++      throw std::runtime_error("Unknown natural recovery reference contract");
++    continue_recovery_reference_ = recovery_contract == "old_ball_tail_until_arrival_v1";
++    if (continue_recovery_reference_ && !is_fixed_home_contract())
++      throw std::runtime_error("Natural recovery requires fixed home");
+     if (!hp_vel_s.empty()) parse_boxes(hp_vel_s, hp_vel_boxes_);
+     if (!hp_vel_core_s.empty()) parse_boxes(hp_vel_core_s, hp_vel_core_boxes_);
+     if (!hp_vel_planner_s.empty()) parse_boxes(hp_vel_planner_s, hp_vel_planner_boxes_);
+@@ -1802,7 +1839,11 @@ class PpOnnxPolicy {
+           LookupMetaOptional(md, alloc, "hitter_pure_passive_head") != "head_yaw_joint,head_pitch_joint" ||
+           last_action_head_mode_ != "zero" || !uses_authoritative_mocap_pose() ||
+           LookupMetaOptional(md, alloc, "hitter_pingpong_rally_end_contract") != "ball_clock_followthrough_v1" ||
+-          LookupMetaOptional(md, alloc, "hitter_pure_hold_pose_contract") != "actual_full_body_B32_5_K20_complete_v2" ||
++          // Two-clip fixed HOME uses the B32 HOLD; the four-stroke task holds the first frame of
++          // its stand-backhand clip and must also carry the natural recovery tail it was trained with.
++          (LookupMetaOptional(md, alloc, "hitter_pure_hold_pose_contract") != "actual_full_body_B32_5_K20_complete_v2" &&
++           (LookupMetaOptional(md, alloc, "hitter_pure_hold_pose_contract") != "stand_backhand_first_frame_v15" ||
++            !continue_recovery_reference_)) ||
+           LookupMetaOptional(md, alloc, "hitter_pure_hold_reference_sha256").size() != 64)
+         throw std::runtime_error("fixed session HOME requires continuous v3/rally_final_v2, "
+             "zero XY station range, original HOLD and direct ball-clock contracts");
+@@ -2728,6 +2769,13 @@ class PpOnnxPolicy {
+   // {x_lo, x_hi, y_lo, y_hi, z_lo, z_hi} — pos boxes station-relative x/y + absolute z.
+   bool has_hitter_pure_boxes() const { return !hp_pos_boxes_.empty(); }
+   const std::vector<std::array<double, 6>>& hp_pos_boxes() const { return hp_pos_boxes_; }
++  // Admission box of a planner target: the qualified envelope when the export carries one.
++  const std::vector<std::array<double, 6>>& hp_pos_support_boxes() const {
++    return hp_pos_support_boxes_.empty() ? hp_pos_boxes_ : hp_pos_support_boxes_;
++  }
++  bool has_qualified_position_support() const { return !hp_pos_support_boxes_.empty(); }
++  // After the follow-through the old ball's target and clock stay visible until the next ball.
++  bool continue_recovery_reference() const { return continue_recovery_reference_; }
+   const std::vector<std::array<double, 6>>& hp_vel_boxes() const { return hp_vel_boxes_; }
+   const std::vector<std::array<double, 6>>& hp_vel_core_boxes() const {
+     return hp_vel_core_boxes_;
+@@ -3356,10 +3404,15 @@ class PpOnnxPolicy {
+ 
+   // Deterministic mean action (31), Isaac order.
+   Eigen::VectorXd mean_action(const Eigen::VectorXd& obs, int time_step) {
+-    auto out = Run(obs, time_step, {"actions"});
++    auto out = Run(obs, time_step, {"actions"}, true);
+     return Map(out[0], kNumJoints);
+   }
+ 
++  // Frames per ONNX input (1 unless the model declares obs_frame_history).
++  int obs_frames() const { return obs_frames_; }
++  // Forget the frame history: the next policy tick seeds every slot with its own frame.
++  void reset_obs_history() { obs_history_seeded_ = false; }
++
+   // Schema28's second named output is not another actuator command. It is the
+   // frozen core's 15 policy-owned action columns for the *next* observation's
+   // append-only shadow feedback. The composed 31-D output remains the sole
+@@ -3480,15 +3533,34 @@ class PpOnnxPolicy {
+   }
+   bool compact_execution_ = false;
+   bool small_station_ = false;
++  // push_frame: this is the policy tick, so the observation enters the frame history.
++  // Reference-only calls leave a multi-frame input at zero; their outputs ignore obs.
+   std::vector<Ort::Value> Run(const Eigen::VectorXd& obs, int time_step,
+-                              const std::vector<const char*>& out_names) {
+-    obs_f_.resize(obs_dim_);
+-    for (int i = 0; i < obs_dim_; ++i) obs_f_[i] = static_cast<float>(obs[i]);
++                              const std::vector<const char*>& out_names,
++                              bool push_frame = false) {
++    const int width = obs_dim_ * obs_frames_;
++    obs_f_.assign(width, 0.f);
++    if (obs_frames_ == 1) {
++      for (int i = 0; i < obs_dim_; ++i) obs_f_[i] = static_cast<float>(obs[i]);
++    } else if (push_frame) {
++      if (!obs_history_seeded_) {
++        obs_history_.assign(width, 0.f);
++        for (int k = 0; k < obs_frames_; ++k)
++          for (int i = 0; i < obs_dim_; ++i)
++            obs_history_[k * obs_dim_ + i] = static_cast<float>(obs[i]);
++        obs_history_seeded_ = true;
++      } else {
++        for (int i = 0; i + obs_dim_ < width; ++i) obs_history_[i] = obs_history_[i + obs_dim_];
++        for (int i = 0; i < obs_dim_; ++i)
++          obs_history_[width - obs_dim_ + i] = static_cast<float>(obs[i]);
++      }
++      obs_f_ = obs_history_;
++    }
+     float ts = static_cast<float>(time_step);
+-    std::array<int64_t, 2> obs_shape{1, obs_dim_};
++    std::array<int64_t, 2> obs_shape{1, width};
+     std::array<int64_t, 2> ts_shape{1, 1};
+     std::array<Ort::Value, 2> ins{
+-        Ort::Value::CreateTensor<float>(mem_, obs_f_.data(), obs_dim_, obs_shape.data(), 2),
++        Ort::Value::CreateTensor<float>(mem_, obs_f_.data(), width, obs_shape.data(), 2),
+         Ort::Value::CreateTensor<float>(mem_, &ts, 1, ts_shape.data(), 2)};
+     static const char* in_names[2] = {"obs", "time_step"};
+     return session_->Run(Ort::RunOptions{nullptr}, in_names, ins.data(), 2,
+@@ -3509,7 +3581,7 @@ class PpOnnxPolicy {
+       throw std::runtime_error(
+           "deploy.yaml task_plugin is not a3_pingpong_hitter_pure");
+     }
+-    if (deploy.observation_dim != obs_dim_ ||
++    if (deploy.observation_dim != obs_dim_ * obs_frames_ ||
+         deploy.action_dim != kNumJoints) {
+       throw std::runtime_error(
+           "deploy.yaml observation/action dimensions do not match the ONNX");
+@@ -3626,6 +3698,8 @@ class PpOnnxPolicy {
+   std::vector<double> clip_seg_lengths_, clip_strike_phases_;  // empty on legacy exports
+   std::vector<Vec2> reach_offsets_;  // per-clip ref base->racket reach; empty on old exports
+   std::vector<std::array<double, 6>> hp_pos_boxes_, hp_vel_boxes_;  // hitter_pure geometry
++  std::vector<std::array<double, 6>> hp_pos_support_boxes_;  // admission only; never HOLD geometry
++  bool continue_recovery_reference_ = false;
+   std::vector<std::array<double, 6>> hp_vel_core_boxes_, hp_vel_planner_boxes_;
+   double hp_vel_planner_mix_prob_ = 0.0;
+   int hp_vel_range_ramp_steps_ = 0;
+@@ -3717,6 +3791,9 @@ class PpOnnxPolicy {
+   int gait_max_cycles_ = 0;
+   double gait_velocity_max_ = 0.0;
+   std::vector<float> obs_f_;
++  int obs_frames_ = 1;                 // consecutive frames per ONNX input
++  std::vector<float> obs_history_;     // obs_frames_ frames, oldest first
++  bool obs_history_seeded_ = false;
+   int obs_dim_ = kObsDim;  // detected from the model input at load (180 full / 175 deploy_parity)
+ };
+ 
+diff --git a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp
+index ec45030..66fa549 100644
+--- a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp
++++ b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/include/a3_pingpong/pp_policy.hpp
+@@ -1242,7 +1242,7 @@ class PpPolicy {
+   // Runtime swing level: 0 = hold wind-up (quasi-stand), 1 = periodic forehand.
+   // Any EXTERNAL level change (keyboard, safety guard) cancels a pending swing-rest
+   // auto re-arm — a guard trip must never re-enter the swing on its own.
+-  void set_level(int lvl) { rest_rearm_armed_.store(false); level_.store(lvl); }
++  void set_level(int lvl) { rest_rearm_armed_.store(false); natural_recovery_active_.store(false); level_.store(lvl); }
+   int level() const { return level_.load(); }
+ 
+   // Live swing-speed tuning (real-time stretch; <1.0 slower). Clamped to a sane range.
+@@ -1262,6 +1262,7 @@ class PpPolicy {
+   // QUEUED and applied at the next safe boundary (level 0, or the next windup start
+   // of the periodic/single-swing clock) in ComputeCommand.
+   void set_swing_dir(int d) {
++    if (level_.load() == 0) natural_recovery_active_.store(false);
+     const int want = d >= 0 ? 1 : -1;
+     if (level_.load() == 1 && swing_dir_.load() != want) {
+       pending_swing_dir_.store(want);
+@@ -1293,6 +1294,7 @@ class PpPolicy {
+     const RuntimeHandoffReset handoff =
+         runtime_handoff_reset(onnx_.has_bounded_qdes_contract());
+     last_action_.setZero();
++    onnx_.reset_obs_history();
+     affine_handoff_feedback_.setZero();
+     core_action_shadow_owned_.setZero();
+     // v12 slew: the executed-target integrator restarts from default_q on every
+@@ -1345,6 +1347,7 @@ class PpPolicy {
+       planner_current_producer_epoch_ = 0;
+       planner_frozen_producer_epoch_ = 0;
+       planner_frozen_flight_id_ = 0;
++      natural_recovery_active_.store(false);
+       planner_frozen_revision_id_ = 0;
+       planner_schema22_cold_coverage_reported_producer_epoch_ = 0;
+       planner_schema22_cold_coverage_reported_flight_id_ = 0;
+@@ -1440,7 +1443,7 @@ class PpPolicy {
+     const std::uint64_t origin = swing_clock_origin_.load();
+     const double t = planner_swing_elapsed_s(
+         tick_idx, origin, cfg_.dt, swing_speed_.load());
+-    if (level_.load() == 0) {
++    if (level_.load() == 0 && !natural_recovery_active_.load()) {
+       // New HitterPingPong policies use the same side-neutral WAIT sentinel as training.
+       // Metadata-less/model_21800 exports retain the historical value and clamp below.
+       if (onnx_.uses_late_reveal_raw_tts_contract()) {
+@@ -1532,6 +1535,7 @@ class PpPolicy {
+       const int pend = pending_swing_dir_.load();
+       if (pend != 0 && (level_.load() == 0 || last_tts_at_windup_)) {
+         pending_swing_dir_.store(0);
++        natural_recovery_active_.store(false);
+         swing_dir_.store(pend);
+         std::fprintf(stderr, "[pp] queued swing dir applied -> %s\n",
+                      pend > 0 ? "FOREHAND" : "BACKHAND");
+@@ -1629,6 +1633,9 @@ class PpPolicy {
+           set_planner_status_("native_completion_ledger");
+         }
+         level_.store(0);
++        // Natural recovery: the old ball's frozen target and its clock stay visible (down to the
++        // clip's last frame) until the next ball arrives, as in training.
++        natural_recovery_active_.store(cfg_.planner_mode && onnx_.continue_recovery_reference());
+         // Completion occurs after the edge cache was sampled above. Keep the cache consistent
+         // immediately so a same-side next flight cannot masquerade as a 1->1 continuation.
+         planner_sync_completion_cache(swing_level_prev_);
+@@ -1695,7 +1702,7 @@ class PpPolicy {
+     // (the Gate 2.5 P2 3-5 s bare-hold tip). Training now zeroes the reference joint
+     // velocities on held envs (commands.py joint_vel); mirror it in every policy-hold
+     // state (level 0 = scripted hold AND the planner post-swing recovery hold).
+-    if (level_.load() == 0) {
++    if (level_.load() == 0 && !natural_recovery_active_.load()) {
+       refs.joint_vel.setZero();
+       // ...and the hold JOINT reference is the READY STAND, not the windup crouch
+       // (2026-07-05 lockstep with training commands.joint_pos): frame 0 is an
+@@ -2085,7 +2092,7 @@ class PpPolicy {
+                        st.base_quat_w[3] * st.base_quat_w[3]));
+       const bool near_heading =
+           std::fabs(hold_yaw) < cfg_.static_handoff_yaw_max_deg * M_PI / 180.0;
+-      const bool post_recovery = planner_have_hold_ && near_station && near_heading &&
++      const bool post_recovery = !natural_recovery_active_.load() && planner_have_hold_ && near_station && near_heading &&
+           base_settled &&
+           ((t_since > cfg_.hold_recover_s && upright_still) ||
+            t_since > cfg_.hold_recover_s + 3.0);
+@@ -2143,6 +2150,7 @@ class PpPolicy {
+           const RuntimeHandoffReset handoff =
+               runtime_handoff_reset(onnx_.has_bounded_qdes_contract());
+           last_action_.setZero();
++          onnx_.reset_obs_history();
+           core_action_shadow_owned_.setZero();
+           // v12 slew: the STATIC stand holds nominal (= default_q); the policy resumes
+           // from q_hat_prev = default_q exactly like a training reset.
+@@ -2181,7 +2189,8 @@ class PpPolicy {
+     // during the hold — the wbc_runner rest-hold semantics). Untouched when not planner_mode.
+     if (cfg_.planner_mode) {
+       if (hitter_optional_reach_active_flight(
+-              planner_engaged_, level_.load())) {
++              planner_engaged_, level_.load()) ||
++          natural_recovery_active_.load()) {   // retain the visible old-ball recovery target
+         // Active swing -> frozen world target. A safety/guard transition to
+         // level 0 invalidates the active-flight view immediately even if the
+         // lifecycle cleanup runs on the following control tick.
+@@ -4951,14 +4960,17 @@ class PpPolicy {
+       const Vec2 relative_target =
+           Vec2(pos_w[0], pos_w[1]) - station_session_origin_w_;
+       constexpr double kFixedTargetToleranceM = 0.030;
+-      const auto& pos_box = onnx_.hp_pos_boxes()[eng_clip];
++      const auto& pos_box = onnx_.hp_pos_support_boxes()[eng_clip];
+       const bool x_supported = onnx_.is_fixed_home_contract()
+           ? (relative_target[0] >= pos_box[0] && relative_target[0] <= pos_box[1])
+           : std::fabs(relative_target[0] - reach_offset_clip_[eng_clip][0]) <= kFixedTargetToleranceM;
+       const double y_margin = onnx_.is_fixed_home_contract() ? 0. : kFixedTargetToleranceM;
++      const std::array<double, 2> trained_y = onnx_.has_qualified_position_support()
++          ? std::array<double, 2>{pos_box[2], pos_box[3]}
++          : std::array<double, 2>{hp_y_band_[eng_clip][0], hp_y_band_[eng_clip][1]};
+       const bool y_supported =
+-          relative_target[1] >= hp_y_band_[eng_clip][0] - y_margin &&
+-          relative_target[1] <= hp_y_band_[eng_clip][1] + y_margin;
++          relative_target[1] >= trained_y[0] - y_margin &&
++          relative_target[1] <= trained_y[1] + y_margin;
+       if (!x_supported || !y_supported) {
+         if ((gate_warn_tick_++ % 25) == 0) {
+           std::fprintf(
+@@ -6128,6 +6140,9 @@ class PpPolicy {
+   Vec4 last_external_base_quat_w_ = Vec4(1.0, 0.0, 0.0, 0.0);
+   std::uint64_t base_warn_tick_ = 0;    // repeat the stale-mocap warning every ~2 s
+   std::uint64_t gate_warn_tick_ = 0;    // throttle the target-gate rejection detail print
++  // Fixed-HOME natural recovery (old_ball_tail_until_arrival_v1): level 0 after the follow-through,
++  // but the finished ball's target and clock stay in the observation until the next engage.
++  std::atomic<bool> natural_recovery_active_{false};
+   bool planner_engaged_ = false;        // a planner swing is active (frozen target in flight)
+   bool planner_pending_station_active_ = false;  // Final: level-0 move/settle before clock release
+   Vec2 planner_pending_station_w_ = Vec2::Zero();
+diff --git a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/src/a3_deploy/a3_pingpong_main.cpp b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/src/a3_deploy/a3_pingpong_main.cpp
+index 93465be..ed721f4 100644
+--- a/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/src/a3_deploy/a3_pingpong_main.cpp
++++ b/a3_deploy/a3_deploy_example/src/a3/a3_deploy_onnx_ref/src/a3_deploy/a3_pingpong_main.cpp
+@@ -455,7 +455,7 @@ int main(int argc, char** argv) {
+       if (policy.is_fixed_home_contract()) {
+         out << YAML::Key << "station_contract" << YAML::Value << "fixed_session_anchor_v1"
+             << YAML::Key << "position_support" << YAML::Value << YAML::BeginSeq;
+-        for (const auto& box : policy.hp_pos_boxes()) {
++        for (const auto& box : policy.hp_pos_support_boxes()) {
+           out << YAML::Flow << YAML::BeginSeq;
+           for (double v : box) out << v;
+           out << YAML::EndSeq;
+diff --git a/hope_ws/src/hope_planner_cpp/config/model21800_hardware.yaml b/hope_ws/src/hope_planner_cpp/config/model21800_hardware.yaml
+index bb113c3..e9f896e 100644
+--- a/hope_ws/src/hope_planner_cpp/config/model21800_hardware.yaml
++++ b/hope_ws/src/hope_planner_cpp/config/model21800_hardware.yaml
+@@ -2,7 +2,7 @@
+ # Both nodes use the same Magnus and capped slip/contact model.
+ hope_planner:
+   ros__parameters:
+-    wire_identity_state_file: "/var/lib/hope-lifecycle/planner_wire_identity.state"
++    wire_identity_state_file: ""
+     future_contact_magnus_enabled: true
+     future_contact_spin_enabled: true
+     future_contact_spin_tangential_gain: 0.38744443855065164

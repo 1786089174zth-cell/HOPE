@@ -42,6 +42,7 @@ class TrainCfg:
     lr_decay_iters: int = 250_000
     log_interval: int = 20
     save_interval: int = 1000
+    keep_periodic: int = 0  # 0 keeps all periodic checkpoints
     out: str | None = None
     run_name: str = "four_stroke"
     resume: str | None = None
@@ -182,6 +183,7 @@ class Trainer:
         out.mkdir(parents=True, exist_ok=True)
         (out / "config.json").write_text(json.dumps(asdict(cfg), indent=2))
         (out / "physics_receipt.json").write_text(json.dumps(self.sim.receipt, indent=2))
+        stop_request = out / f"stop.{cfg.run_name}.request"
         writer = None
         try:
             from torch.utils.tensorboard import SummaryWriter
@@ -189,12 +191,12 @@ class Trainer:
             writer = SummaryWriter(str(out / "tensorboard"))
         except Exception:  # noqa: BLE001 -- logging to metrics.jsonl still works
             pass
-        if self.steps == 0:
+        if self.steps == 0 and not stop_request.is_file():
             self.collect(cfg.warmup_steps)
         debt = 0.0
         t_last, it_last = time.perf_counter(), self.iteration
         with (out / "metrics.jsonl").open("a") as log:
-            while self.iteration < cfg.max_iterations:
+            while self.iteration < cfg.max_iterations and not stop_request.is_file():
                 it = self.iteration
                 lr = cosine_lr(cfg.learn.lr, it, cfg.lr_decay_iters)
                 self.pi.set_lr(lr, self.wm)
@@ -220,6 +222,8 @@ class Trainer:
                     now = time.perf_counter()
                     row = {k: (float(v) if torch.is_tensor(v) else v) for k, v in metrics.items()}
                     row.update(iteration=it, env_steps=self.steps, lr=lr,
+                               wm_cuda_graph=self.wm._update.graph is not None,
+                               policy_cuda_graph=self.pi._update.graph is not None,
                                it_per_s=(self.iteration - it_last) / max(now - t_last, 1e-9))
                     t_last, it_last = now, self.iteration
                     row = {k: (v if not isinstance(v, float) or math.isfinite(v) else None) for k, v in row.items()}
@@ -236,6 +240,20 @@ class Trainer:
                     print("[supermimic] " + " ".join(f"{k}={row[k]:.4g}" for k in keys if row.get(k) is not None), flush=True)
                 if self.iteration % cfg.save_interval == 0 or self.iteration == cfg.max_iterations:
                     self.save(out / f"model_{self.iteration}.pt")
+                    if cfg.keep_periodic > 0:
+                        periodic = [p for p in out.glob("model_*.pt") if p.stem[6:].isdecimal()]
+                        periodic.sort(key=lambda p: int(p.stem[6:]))
+                        for old in periodic[:-cfg.keep_periodic]:
+                            old.unlink()
+        if stop_request.is_file():
+            checkpoint = out / f"final_{self.iteration}.pt"
+            self.save(checkpoint)
+            receipt = out / "stop_receipt.json"
+            tmp = receipt.with_suffix(".json.tmp")
+            tmp.write_text(json.dumps(dict(run_id=cfg.run_name, iteration=self.iteration,
+                                           checkpoint=str(checkpoint.resolve())), indent=2) + "\n")
+            tmp.replace(receipt)
+            print(f"[supermimic] stop requested: saved {checkpoint}", flush=True)
         if writer is not None:
             writer.close()
         return out

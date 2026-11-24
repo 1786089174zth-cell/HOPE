@@ -1,0 +1,18 @@
+{
+  "checkpoint": "/home/tianhe/ppq004-view/supermimic-runs/supermimic-long-a050-s17-20261124-01/final_35866.pt",
+  "iteration": 35866,
+  "env_steps": 89729,
+  "run_id": "supermimic-long-a050-s17-20261124-01",
+  "alpha": 0.5,
+  "actor_architecture": "dual_body_mlp_v1",
+  "entries": {
+    "actor": 41,
+    "actor_ema": 41,
+    "critic": 14,
+    "dynamics": 22,
+    "opt_pi": 36,
+    "opt_v": 10,
+    "opt_wm": 14
+  },
+  "sha256": "a34af2d6d80264b6c0267e4f108a2747415e26f317dfdfc2d2dbb8d9ef104364"
+}

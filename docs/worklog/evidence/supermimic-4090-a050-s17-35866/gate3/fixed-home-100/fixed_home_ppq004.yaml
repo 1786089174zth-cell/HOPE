@@ -1,0 +1,49 @@
+hope_ball_flight_packetizer:
+  ros__parameters:
+    drag_k: 0.12453915600992894
+    future_contact_magnus_enabled: true
+    future_contact_spin_enabled: true
+    future_contact_spin_min_coherence: 0.4
+    future_contact_spin_omega_scale: 1.0
+    future_contact_spin_tangential_gain: 0.41642144985036184
+    magnus_k: 0.00399279130564425
+    post_net_future_bounce_restitution_v: 0.9373319241133231
+    post_net_future_bounce_tangential_gain: 0.41642144985036184
+    restitution_h: 0.5835785501496382
+    restitution_v: 0.9373319241133231
+    spin_window_s: 0.18
+    table_friction_cap_mu: 0.218520906499864
+    table_tangential_gain: 0.41642144985036184
+hope_planner:
+  ros__parameters:
+    drag_k: 0.12453915600992894
+    future_contact_magnus_enabled: true
+    future_contact_spin_enabled: true
+    future_contact_spin_min_coherence: 0.4
+    future_contact_spin_omega_scale: 1.0
+    future_contact_spin_tangential_gain: 0.41642144985036184
+    magnus_k: 0.00399279130564425
+    plane_reference_mode: fixed
+    post_net_future_bounce_restitution_v: 0.9373319241133231
+    post_net_future_bounce_tangential_gain: 0.41642144985036184
+    racket_flat_schema: 4
+    reach_permission_contract: disabled_zero_v1
+    reach_permission_enabled: false
+    restitution_h: 0.5835785501496382
+    restitution_v: 0.9373319241133231
+    session_home_input_topic: /hope/runner/session_home_flat
+    spin_window_s: 0.18
+    swing_side_bh_y_range:
+    - -0.275
+    - 0.45979625
+    swing_side_fh_y_range:
+    - -0.900120497
+    - -0.275
+    swing_side_hysteresis_y: 0.04
+    swing_side_reference_mode: session_home_v1
+    swing_side_split_y: -0.275
+    table_friction_cap_mu: 0.218520906499864
+    table_tangential_gain: 0.41642144985036184
+    x_hit_bh_delta: 0.0
+    x_hit_follow_robot: false
+    x_hit_freeze_session_home: false

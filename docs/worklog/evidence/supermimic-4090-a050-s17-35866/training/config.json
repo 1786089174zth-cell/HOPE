@@ -1,0 +1,360 @@
+{
+  "num_envs": 6144,
+  "device": "cuda:0",
+  "seed": 17,
+  "max_iterations": 2147483647,
+  "utd": 0.4,
+  "buffer_steps": 640,
+  "warmup_steps": 64,
+  "wm_only_iterations": 200,
+  "wm_refit_iterations": 0,
+  "action_noise": 0.1,
+  "frames": 10,
+  "actor_architecture": "dual_body_mlp_v1",
+  "actor_hidden": [
+    2048,
+    1024,
+    512,
+    256
+  ],
+  "critic_hidden": [
+    256,
+    128
+  ],
+  "dynamics_hidden": [
+    2048,
+    2048,
+    2048
+  ],
+  "lr_decay_iters": 250000,
+  "log_interval": 25,
+  "save_interval": 500,
+  "keep_periodic": 3,
+  "out": "/home/tianhe/ppq004-view/supermimic-runs/supermimic-long-a050-s17-20261124-01",
+  "run_name": "supermimic-long-a050-s17-20261124-01",
+  "resume": null,
+  "profile": false,
+  "capture": true,
+  "amp": false,
+  "ema_decay": 0.99,
+  "learn": {
+    "lr": 0.0002,
+    "wm_window": 8,
+    "wm_batches": 10,
+    "wm_batch": 2048,
+    "horizon": 32,
+    "batch": 1024,
+    "gamma": 0.99,
+    "lam": 0.95,
+    "grad_norm": 1.0,
+    "grad_value": 0.1,
+    "critic_epochs": 5,
+    "critic_minibatches": 4,
+    "body_reward_alpha": 0.5
+  },
+  "sim": {
+    "friction": [
+      0.3,
+      1.6
+    ],
+    "com_x": [
+      -0.025,
+      0.025
+    ],
+    "com_y": [
+      -0.05,
+      0.05
+    ],
+    "com_z": [
+      -0.05,
+      0.05
+    ],
+    "mass_scale": [
+      0.85,
+      1.15
+    ],
+    "pd_scale": [
+      0.85,
+      1.15
+    ],
+    "nominal_fraction": 0.25,
+    "left_hand_mass": 0.847,
+    "left_hand_com_x": 0.1128,
+    "link_mass_scale": [
+      0.9,
+      1.1
+    ],
+    "left_hand_mass_range": [
+      0.25,
+      1.25
+    ],
+    "right_hand_mass_delta": [
+      -0.15,
+      0.3
+    ],
+    "actuator_fit": "",
+    "actuator_blend": [
+      -0.25,
+      1.25
+    ],
+    "cone": "elliptic",
+    "impratio": 10.0,
+    "nconmax": 48,
+    "njmax": 160
+  },
+  "task": {
+    "assets": "assets/wide_stroke_v26_urdf2_plane058_20261110",
+    "episode_steps": 2000,
+    "minimum_lead": [
+      0.5,
+      0.6,
+      0.58,
+      0.64
+    ],
+    "complete_lead": [
+      0.58,
+      0.72,
+      0.86,
+      0.96
+    ],
+    "plane_probability": 0.6,
+    "plane_x": [
+      0.555,
+      0.58
+    ],
+    "short_notice_probability": [
+      0.0,
+      0.3,
+      0.3,
+      0.3
+    ],
+    "short_notice_min_s": 0.46,
+    "rush_probability": 0.0,
+    "rush_notice_s": [
+      0.24,
+      0.46
+    ],
+    "extra_bank": "",
+    "extra_probability": 0.0,
+    "extra_recovery_s": 0.6,
+    "extra_free": 0.0,
+    "extra_free_after_s": 0.25,
+    "extra_balance": 0.5,
+    "extra_speed_edges": [
+      2.5,
+      4.0
+    ],
+    "extra_height_edges": [
+      1.0,
+      1.2
+    ],
+    "extra_step_lead_s": 0.56,
+    "extra_notice_stretch": [
+      0.3,
+      0.3
+    ],
+    "extra_notice_floor": [
+      0.0,
+      0.3,
+      0.4
+    ],
+    "direct_arm": 2.0,
+    "direct_arm_std": [
+      0.5,
+      0.15
+    ],
+    "direct_face": 1.0,
+    "direct_drive": 1.0,
+    "direct_action": 1.0,
+    "direct_action_std": 0.35,
+    "direct_action_lead_s": 0.02,
+    "direct_action_joint_lag": true,
+    "direct_action_gravity": true,
+    "extra_front_load": 1.5,
+    "extra_front_margin": [
+      0.5,
+      0.25
+    ],
+    "extra_front_smooth": 0.1,
+    "extra_urgent_load": 1.5,
+    "extra_urgent_notice": [
+      0.3,
+      0.4
+    ],
+    "extra_urgent_smooth": 0.02,
+    "extra_urgent_free": 0.0,
+    "extra_urgent_free_window_s": 0.06,
+    "direct_waist_roll": 1.0,
+    "direct_waist_roll_std": 0.05,
+    "feet_slip": 1.0,
+    "feet_slip_std": 0.08,
+    "feet_slip_after_stand_s": 4.0,
+    "stance_command": 1.0,
+    "stance_command_std": 0.012,
+    "waist_rest": 1.0,
+    "waist_rest_std": 0.05,
+    "waist_rest_speed_std": 0.15,
+    "waist_rest_after_s": 0.7,
+    "left_arm": 1.0,
+    "left_arm_std": 0.2,
+    "left_arm_speed_std": 0.4,
+    "left_arm_after_s": 0.3,
+    "left_arm_before_s": 0.5,
+    "extra_table_edge_x": 0.58,
+    "low_probability": 0.25,
+    "low_z_max": 0.88,
+    "low_on_plane": 0.5,
+    "plane_shift": 0.5,
+    "high_probability": 0.0,
+    "high_z_min": 1.12,
+    "target_jitter_pos": 0.02,
+    "target_jitter_vel": 0.1,
+    "edge_probability": 0.15,
+    "edge_overreach": 0.06,
+    "edge_split_only": true,
+    "side_consistent": true,
+    "side_bounds": [
+      -0.58,
+      -0.275,
+      0.1
+    ],
+    "immediate_probability": 0.35,
+    "next_ball_steps": [
+      0,
+      80
+    ],
+    "dwell_probability": 0.5,
+    "dwell_steps": [
+      125,
+      275
+    ],
+    "stand_probability": 0.25,
+    "stand_hold_steps": [
+      200,
+      300
+    ],
+    "long_hold_probability": 0.15,
+    "long_hold_steps": [
+      500,
+      1000
+    ],
+    "stand_x": [
+      0.03,
+      0.1
+    ],
+    "stand_yaw": 0.3,
+    "stance_blend_probability": 0.5,
+    "entry_handoff_s": 3.0,
+    "entry_handoff_probability": 0.8,
+    "midstroke_probability": 0.5,
+    "rsi_xy": 0.03,
+    "rsi_yaw": 0.1,
+    "rsi_joint": 0.03,
+    "rsi_lift": 0.005,
+    "push_rate": 0.12,
+    "push_xy": 0.4,
+    "push_z": 0.1,
+    "push_yaw": 0.3,
+    "joint_offset": 0.01,
+    "noise_gyro": 0.2,
+    "noise_joint_pos": 0.01,
+    "noise_joint_vel": 0.5,
+    "mocap_bias": [
+      0.005,
+      0.005,
+      0.003
+    ],
+    "mocap_noise": [
+      0.003,
+      0.003,
+      0.005
+    ],
+    "mocap_rpy_bias": [
+      0.005236,
+      0.005236,
+      0.008727
+    ],
+    "mocap_rpy_noise": [
+      0.003491,
+      0.003491,
+      0.005236
+    ],
+    "mocap_dropout_rate": 0.05,
+    "mocap_dropout_s": [
+      0.06,
+      1.0
+    ],
+    "target_bias": 0.003,
+    "target_noise": 0.003,
+    "target_error": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "target_refine_tts": [
+      0.0,
+      0.0
+    ],
+    "target_refine_error": [
+      0.012,
+      0.02,
+      0.018
+    ],
+    "delay_probability": 0.5,
+    "action_rate": -0.1,
+    "joint_limit": -2.0,
+    "action_accel": -5.0,
+    "hold_action_rate": -10.0,
+    "feet_position": 1.0,
+    "feet_position_std": 0.06,
+    "feet_height": 0.5,
+    "feet_height_std": 0.025,
+    "root_height": 0.5,
+    "root_height_std": 0.04,
+    "feet_flat": 0.5,
+    "feet_flat_std": 0.15,
+    "station": 0.5,
+    "station_std": 0.04,
+    "feet_station": 0.5,
+    "feet_station_std": 0.05,
+    "heading": 0.5,
+    "heading_std": 0.08,
+    "feet_heading": 0.5,
+    "feet_heading_std": 0.1,
+    "strike_window_s": 0.12,
+    "racket_position": 3.0,
+    "racket_position_std": 0.1,
+    "racket_velocity": 2.0,
+    "racket_velocity_std": 0.6,
+    "racket_normal": 1.0,
+    "racket_normal_std": 0.2,
+    "racket_blade": 2.0,
+    "racket_blade_std": 0.045,
+    "strike_fine_share": 0.5,
+    "racket_position_fine_std": 0.02,
+    "racket_velocity_fine_std": 0.2,
+    "racket_normal_fine_std": 0.06,
+    "racket_drive": 0.0,
+    "return_velocity": 1.0,
+    "return_velocity_std": 0.5,
+    "return_velocity_fine_std": 0.15,
+    "landing": 2.0,
+    "landing_std": 0.4,
+    "landing_fine_std": 0.12,
+    "table_edge_x": 0.58,
+    "table_top_z": 0.76,
+    "table_clearance": 0.005,
+    "table_keepout": -6.0,
+    "table_keepout_std": 0.015,
+    "blade_radius": 0.085,
+    "torque_limit": 0.0,
+    "torque_limit_margin": 0.8,
+    "range_keepout": 0.0,
+    "range_keepout_margin": 0.02,
+    "range_keepout_std": 0.02,
+    "range_keepout_joints": [],
+    "trunk_upright": 0.5,
+    "trunk_upright_std": 0.12,
+    "termination_softness": 0.05
+  }
+}

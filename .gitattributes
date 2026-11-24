@@ -27,3 +27,9 @@ a3_deploy/a3_deploy_example/assets/a3_runtime/serve/motions/a3p_op3_serve025_edg
 # Annotated bundles retain the original CRLF table followed by generated LF segments.
 a3_deploy/a3_deploy_example/assets/a3_runtime/serve/archive/*.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 a3_deploy/a3_deploy_example/assets/a3_runtime/serve/motions/a3p_op3_serve025_v2*_model14600.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Final local SuperMimic checkpoint
+docs/worklog/evidence/supermimic-4090-a050-s17-35866/checkpoint/*.pt filter=lfs diff=lfs merge=lfs -text
+docs/worklog/evidence/supermimic-4090-a050-s17-35866/gate3/*/telemetry.tar.gz filter=lfs diff=lfs merge=lfs -text
+docs/worklog/evidence/supermimic-4090-a050-s17-35866/gate3/policy.onnx filter=lfs diff=lfs merge=lfs -text
+docs/worklog/evidence/supermimic-4090-a050-s17-35866/code/*.patch whitespace=-blank-at-eol

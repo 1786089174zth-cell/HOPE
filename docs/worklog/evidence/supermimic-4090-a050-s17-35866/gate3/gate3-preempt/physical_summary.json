@@ -1,0 +1,29 @@
+{
+  "run": "gate3-100-work/fixed-home-26-35866-preempt-r2",
+  "serves": 26,
+  "engaged": 26,
+  "falls": 0,
+  "certification_pass": false,
+  "runner_sha256": "b6aa1061590ff24015cd0017167052f0314a265560233b2436bc255678655e4b",
+  "policy_sha256": "41b85b2ba3cf4f4c814ea46cc37244fe220e017b08393eb28fb0258dba5b13fc",
+  "packetizer": null,
+  "report_contacts": 26,
+  "report_legal_landings": 26,
+  "contacts": 26,
+  "legal_landings": 26,
+  "rejudged_shots": [],
+  "no_contact_shots": [],
+  "contact_not_legal_shots": [],
+  "by_side": {
+    "backhand": {
+      "shots": 18,
+      "contacts": 18,
+      "legal_landings": 18
+    },
+    "forehand": {
+      "shots": 8,
+      "contacts": 8,
+      "legal_landings": 8
+    }
+  }
+}
