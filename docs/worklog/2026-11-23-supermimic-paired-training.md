@@ -30,6 +30,23 @@ $exp = 'D:/CapstoneTraining/supermimic_reward_paired_20261123_01'
 
 `protocol.json` contains every training command. `score_paired.py` scores atomically saved checkpoints and may run concurrently. A repeat needs a fresh evidence directory and the helper scripts present there.
 
-## Run status
+## Results on November 24
 
-Training and scoring are in progress. Results and hashes will be recorded after all six runs and 36 evaluations.
+All six arms finished at iteration 3,000. All 36 independent checkpoint evaluations passed the count, exposure and checkpoint-budget checks. Within each seed, actor weights, critic weights, dynamics weights, initial observation history and initial simulator state matched across α. The training configurations matched except for α and the run/output identifiers. Each of the 72 motion-by-checkpoint measurements had at least 133 scored strikes. Across all checkpoints there were zero hits in 11,490 opportunities. Neither motion reached the learning criterion for either α on any seed.
+
+| Motion | α | Final hits / strikes | Final position error, seed mean | Final falls / active robot ticks | Falls / 1,000 active ticks pooled over all six checkpoints and three seeds |
+|---|---:|---:|---:|---:|---:|
+| Stand | 1.0 | 0 / 495 | 36.10 cm | 0 / 48,200 | 0.069 (19 / 277,297) |
+| Stand | 0.5 | 0 / 461 | 30.35 cm | 0 / 45,771 | 0.170 (48 / 281,791) |
+| Step | 1.0 | 0 / 468 | 54.48 cm | 0 / 47,239 | 0.054 (16 / 296,247) |
+| Step | 0.5 | 0 / 491 | 50.47 cm | 0 / 49,168 | 0.174 (51 / 293,012) |
+
+At the final checkpoint, idle/hold falls were 5 / 96,561 robot ticks for α=1 and 4 / 97,061 for α=0.5. Each seed contributes equally to the position-error means. The table pools raw event counts and exposure for the rates. Signed final position-error differences (α=0.5 minus α=1 in cm) for seeds 17, 29 and 43 were −9.56, −11.12, +3.42 standing and −4.99, −8.21, +1.17 stepping. Lower mean final error for α=0.5 did not establish faster learning of the composite hit criterion. The learning-time comparison is censored at 3,000 iterations. The scores apply to the simulator's strike window and a single held-out evaluation seed.
+
+The score collector was also run on the prior 12-iteration checkpoint. Its same-run counters reconciled. Repeating the prior GPU rollout with the same seed scored 48 rather than 45 strikes and 63 rather than 62 falls, so a fixed evaluation seed does not guarantee identical post-reset trajectories.
+
+The protocol, evaluator and reproducibility scripts were archived in commit `863f814bc3464bb71edb8b1045de8d1c58202c5a`. The following results commit records the completed experiment. The archived scripts are in [the evidence directory](evidence/supermimic_reward_paired_20261123_01/). The [108-row CSV](evidence/supermimic_reward_paired_20261123_01/learning_curves.csv) holds both active motions and the waiting bucket. The [full comparison](evidence/supermimic_reward_paired_20261123_01/comparison.json) includes paired effects, initialization and input hashes, and SHA-256 for all 36 checkpoints and their native evaluation JSON files. Hashes refer to the original files on the experiment drive. The recorded GPU was an NVIDIA RTX 5080 Laptop. The separately specified 6,144-environment RTX 4090 run uses a different training budget and configuration.
+
+The thick curves show the three-seed means, the thin curves individual seeds, and the dashed line the 20% hit criterion. The two hit curves overlap throughout the experiment.
+
+![Simulation learning curves](evidence/supermimic_reward_paired_20261123_01/learning_curves.png)

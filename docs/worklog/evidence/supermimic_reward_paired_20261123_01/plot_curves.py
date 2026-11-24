@@ -38,12 +38,15 @@ def main():
             ax.grid(axis="y", alpha=.22)
             ax.spines[["right","top"]].set_visible(False)
             ax.yaxis.set_major_locator(MaxNLocator(5))
-            ax.set_ylim(bottom=0)
             if j == 0:
                 ax.set_ylabel(label)
             if i == 2:
                 ax.set_xticks(iters, [f"{k/1000:g}k" for k in iters])
                 ax.set_xlabel("Training iteration")
+    for i, (field, _) in enumerate(fields):
+        peak = max(float(r[field]) for r in rows if r["mode"] in ("stand", "step"))
+        ceiling = max(peak, 20 if field == "hit_pct" else 0.01)
+        axes[i, 0].set_ylim(-0.025 * ceiling, 1.08 * ceiling)
     fig.legend([Line2D([], [], color=c, linewidth=2, marker="o", markersize=4) for c in colors.values()],
                ["α = 1", "α = 0.5"], loc="outside upper right", ncols=2, frameon=False)
     fig.suptitle("SuperMimic  |  Three paired training seeds", x=.03, ha="left")
