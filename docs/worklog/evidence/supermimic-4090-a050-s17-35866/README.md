@@ -25,6 +25,6 @@ The 100-ball rollout recorded 100 complete physical trajectories. The report cou
 Each result directory contains the scenario, official report, per-ball report, Planner report, and a compressed archive of plant, ball, observation, Runner and Planner CSVs. The MP4 renders those measured poses and flights at real time.
 
 ## Source and reproduction
-[Reproduce the training environment and verify a checkpoint resume](REPRODUCE_ZH.md).
+[Reproduce the training environment and verify a checkpoint resume (English)](REPRODUCE_ZH.md).
 
 Training started from `f3b4e809ab084d05b7019b811785c4aa9354086d`. The Trainer changes in this commit add a RunId-scoped stop request, atomic final save, graph telemetry, and bounded periodic retention. The native Gate3 workspace used fork `main` at `756918a8cfa7d496f6ea88018362be187985187e`. The [baseline compatibility patch](code/native-compatibility.patch) and [earlier-commit candidate patch](code/native-preempt-compatibility.patch) are alternatives against that base. The candidate also used the [earlier flight packetizer configuration](code/candidate-flight-packetizer.yaml). The [standalone bundle exporter](code/export_core_bundle.py) uses the tracked reference clips, native 110-D observation contract, and checkpoint EMA. Shell scripts and receipts retain the local run paths for provenance. Substitute your workspace and native install paths when rebuilding.

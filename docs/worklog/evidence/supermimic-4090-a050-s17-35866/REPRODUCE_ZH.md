@@ -2,13 +2,13 @@
 
 ## Get the code and checkpoint
 
-`f3b4e80` was the original training base. The archive commit `7d414f4` adds the model, evidence, and Trainer stop handling. The commands below check out that exact code. Run the remaining commands from the repository root in Bash.
+`f3b4e80` was the original training base. Commit `7d414f4` archived the model and added Trainer stop handling. The commands below check out `fa90d5a`, which also includes this guide and the one-update resume receipt. Then continue at **Prepare the environment** in the same Bash session. The first section of the pinned copy still shows the earlier checkout command.
 
 ```bash
 GIT_LFS_SKIP_SMUDGE=1 git clone --branch experiment/supermimic-reward-split \
   https://github.com/1786089174zth-cell/HOPE.git
 cd HOPE
-GIT_LFS_SKIP_SMUDGE=1 git checkout --detach 7d414f42c3a002719a3a6b20964205a689d79e5c
+GIT_LFS_SKIP_SMUDGE=1 git checkout --detach fa90d5aff6f586837975ef58ae48e94b7bba9203
 git lfs install --local
 ARCHIVE=docs/worklog/evidence/supermimic-4090-a050-s17-35866
 BANK=hope_training/whole_body_tracking/assets/wide_stroke_v26_urdf2_plane058_20261110/physical_tuple_bank.npz
