@@ -1,0 +1,54 @@
+{
+  "checkpoint": "model_35867.pt",
+  "iteration": 35867,
+  "env_steps": 66,
+  "run_id": "supermimic-doccheck-35866-to-35867-20261124-01",
+  "alpha": 0.5,
+  "actor_architecture": "dual_body_mlp_v1",
+  "entries": {
+    "actor": 41,
+    "actor_ema": 41,
+    "critic": 14,
+    "dynamics": 22,
+    "opt_pi": 36,
+    "opt_v": 10,
+    "opt_wm": 14
+  },
+  "sha256": "1c4140c0573d5c58be178c617f09324a5ea99aea6e5520c02b9ac0a2c9fdbc61",
+  "input_checkpoint": "checkpoint/final_35866.pt",
+  "archive_commit": "7d414f42c3a002719a3a6b20964205a689d79e5c",
+  "loaded_iteration": 35866,
+  "exit_code": 0,
+  "exit_reason": "absolute_iteration_limit",
+  "command": "run_supermimic supermimic-doccheck-35866-to-35867-20261124-01 35867 1 \"$CKPT\"",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "driver": "580.178.04",
+  "torch": "2.11.0+cu128",
+  "config_overrides": [
+    "run_name",
+    "out",
+    "resume",
+    "max_iterations",
+    "log_interval"
+  ],
+  "optimizer_step_increments": {
+    "opt_pi": 1,
+    "opt_v": 20,
+    "opt_wm": 10
+  },
+  "changed_network_tensors": {
+    "actor": 36,
+    "actor_ema": 36,
+    "critic": 10,
+    "dynamics": 14
+  },
+  "same_size_encoder_offsets_restored": true,
+  "metrics_at_pre_update_iteration_35866": {
+    "wm/loss": 0.0008721582707948983,
+    "policy/upper_grad_norm": 2.784158706665039,
+    "policy/lower_grad_norm": 5.477107048034668,
+    "policy/value_loss": 0.08159223943948746,
+    "wm_cuda_graph": false,
+    "policy_cuda_graph": false
+  }
+}
